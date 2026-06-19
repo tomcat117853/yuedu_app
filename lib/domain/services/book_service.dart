@@ -79,6 +79,7 @@ class BookService {
         Chapter(
           id: '${bookId}_ch_0',
           bookId: bookId,
+          chapterKey: '${bookId}_ch_0',
           title: '目录',
           orderIndex: 0,
         ),
@@ -88,6 +89,7 @@ class BookService {
         Chapter(
           id: '${bookId}_ch_0',
           bookId: bookId,
+          chapterKey: '${bookId}_ch_0',
           title: '首页',
           orderIndex: 0,
         ),

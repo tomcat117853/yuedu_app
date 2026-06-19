@@ -28,7 +28,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => AppConstants.databaseVersion;
+  int get schemaVersion => Constants.databaseVersion;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -54,7 +54,7 @@ class AppDatabase extends _$AppDatabase {
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, AppConstants.databaseName));
+    final file = File(p.join(dbFolder.path, Constants.databaseName));
 
     // 在移动平台上使用 sqlite3_flutter_libs 加载原生库
     if (Platform.isAndroid || Platform.isIOS) {

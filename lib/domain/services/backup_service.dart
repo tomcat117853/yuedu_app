@@ -86,7 +86,7 @@ class BookData {
   final String? coverPath;
   final String? intro;
   final String? category;
-  final int type;
+  final String type;
   final String? localPath;
   final String? format;
   final int totalChapters;
@@ -104,7 +104,7 @@ class BookData {
     this.coverPath,
     this.intro,
     this.category,
-    this.type = 0,
+    this.type = 'local',
     this.localPath,
     this.format,
     this.totalChapters = 0,
@@ -124,7 +124,7 @@ class BookData {
       coverPath: json['cover_path'] as String?,
       intro: json['intro'] as String?,
       category: json['category'] as String?,
-      type: json['type'] as int? ?? 0,
+      type: json['type'] as String? ?? 'local',
       localPath: json['local_path'] as String?,
       format: json['format'] as String?,
       totalChapters: json['total_chapters'] as int? ?? 0,
@@ -414,7 +414,7 @@ class BookmarkData {
   final int chapterIndex;
   final int charOffset;
   final String? label;
-  final int? color;
+  final String? color;
   final DateTime createdAt;
 
   BookmarkData({
@@ -434,7 +434,7 @@ class BookmarkData {
       chapterIndex: json['chapter_index'] as int? ?? 0,
       charOffset: json['char_offset'] as int? ?? 0,
       label: json['label'] as String?,
-      color: json['color'] as int?,
+      color: json['color'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -585,7 +585,7 @@ class BackupService {
       readProgress: readProgress.map(ProgressData.fromModel).toList(),
       bookmarks: allBookmarks.map(BookmarkData.fromModel).toList(),
       settings: SettingsData.fromConfig(
-        layoutConfig ?? const LayoutConfig(),
+        layoutConfig ?? LayoutConfig(),
         theme ?? ReaderTheme.presets[0],
         readMode,
       ),
@@ -707,19 +707,19 @@ class BackupService {
       db.BooksCompanion(
         id: Value(data.id),
         title: Value(data.title),
-        author: Value(data.author),
+        author: Value(data.author ?? ''),
         coverPath: Value(data.coverPath),
         intro: Value(data.intro),
         category: Value(data.category),
-        type: Value(data.type),
+        type: Value(data.type ?? 'local'),
         localPath: Value(data.localPath),
-        format: Value(data.format),
+        format: Value(data.format ?? 'txt'),
         totalChapters: Value(data.totalChapters),
-        wordCount: Value(data.wordCount),
+        wordCount: Value(data.wordCount ?? 0),
         status: Value(data.status),
         createdAt: Value(data.createdAt),
         updatedAt: Value(data.updatedAt),
-        groupId: Value(data.groupId),
+        groupId: Value(data.groupId ?? 'default'),
         sortOrder: Value(data.sortOrder),
       ),
       mode: InsertMode.insertOrReplace,
@@ -733,13 +733,13 @@ class BackupService {
         id: Value(data.id),
         bookId: Value(data.bookId),
         sourceId: Value(data.sourceId),
-        chapterKey: Value(data.chapterKey),
+        chapterKey: Value(data.chapterKey ?? data.id),
         title: Value(data.title),
         orderIndex: Value(data.orderIndex),
         contentPath: Value(data.contentPath),
         isCached: Value(data.isCached),
         isVip: Value(data.isVip),
-        wordCount: Value(data.wordCount),
+        wordCount: Value(data.wordCount ?? 0),
         fetchedAt: Value(data.fetchedAt),
       ),
       mode: InsertMode.insertOrReplace,
@@ -792,8 +792,8 @@ class BackupService {
         bookId: Value(data.bookId),
         chapterIndex: Value(data.chapterIndex),
         charOffset: Value(data.charOffset),
-        label: Value(data.label),
-        color: Value(data.color),
+        label: Value(data.label ?? ''),
+        color: Value(data.color ?? '#FFC107'),
         createdAt: Value(data.createdAt),
       ),
       mode: InsertMode.insertOrReplace,
@@ -839,27 +839,26 @@ class BackupService {
       return [];
     }
 
-    final files = await backupDir.list().whereType<File>().toList();
-    files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+    final files = await backupDir.list().toList();
+    final jsonFiles = files.whereType<File>().where((f) => f.path.endsWith('.json')).toList();
+    jsonFiles.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
 
     final backups = <Map<String, dynamic>>[];
-    for (final file in files) {
-      if (file.path.endsWith('.json')) {
-        try {
-          final content = await file.readAsString();
-          final data = json.decode(content) as Map<String, dynamic>;
-          final bookCount = (data['books'] as List?)?.length ?? 0;
+    for (final file in jsonFiles) {
+      try {
+        final content = await file.readAsString();
+        final data = json.decode(content) as Map<String, dynamic>;
+        final bookCount = (data['books'] as List?)?.length ?? 0;
 
-          backups.add({
-            'path': file.path,
-            'name': file.path.split(Platform.pathSeparator).last,
-            'createdAt': data['createdAt'] ?? file.lastModifiedSync().toIso8601String(),
-            'bookCount': bookCount,
-            'version': data['version'] ?? 'unknown',
-          });
-        } catch (_) {
-          // Skip invalid files
-        }
+        backups.add({
+          'path': file.path,
+          'name': file.path.split(Platform.pathSeparator).last,
+          'createdAt': data['createdAt'] ?? file.lastModifiedSync().toIso8601String(),
+          'bookCount': bookCount,
+          'version': data['version'] ?? 'unknown',
+        });
+      } catch (_) {
+        // Skip invalid files
       }
     }
 

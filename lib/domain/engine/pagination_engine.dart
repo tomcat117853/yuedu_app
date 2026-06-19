@@ -16,7 +16,8 @@ class PaginationEngine {
 
     final paragraphs = _splitParagraphs(text);
     final pages = <PageRange>[];
-    int currentOffset = 0, currentHeight = 0, pageStart = 0, pageParagraphStart = 0;
+    int currentOffset = 0, pageStart = 0, pageParagraphStart = 0;
+    double currentHeight = 0;
 
     for (int i = 0; i < paragraphs.length; i++) {
       final paragraph = paragraphs[i];

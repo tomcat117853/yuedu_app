@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../../../domain/models/book.dart';
 import '../../../domain/models/chapter.dart';
+import '../../../domain/models/read_progress.dart';
 import '../../../data/repositories/book_repository.dart';
+import '../../../data/parsers/epub_parser.dart';
+import '../../../data/parsers/txt_parser.dart';
 import '../../../providers.dart';
 
 /// 书架状态

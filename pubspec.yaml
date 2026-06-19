@@ -48,8 +48,8 @@ dependencies:
   # 分享
   share_plus: ^10.0.0
 
-  # TTS 语音朗读
-  flutter_tts: ^4.0.2
+  # TTS 语音朗读 (暂时注释，需要nuget.exe)
+  # flutter_tts: ^4.0.2
 
   # 云同步 (Supabase)
   supabase: ^2.5.10

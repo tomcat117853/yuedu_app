@@ -54,6 +54,9 @@ class ReaderTheme {
     return presets[index];
   }
 
+  /// 获取日间主题
+  static ReaderTheme day() => presets[0];
+
   factory ReaderTheme.fromJson(Map<String, dynamic> json) {
     return ReaderTheme(
       themeIndex: json['theme_index'] as int? ?? 0,

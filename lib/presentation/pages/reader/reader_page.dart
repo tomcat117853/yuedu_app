@@ -7,10 +7,11 @@ import 'reader_provider.dart';
 import 'widgets/page_text_view.dart';
 import 'widgets/reader_settings.dart';
 import 'widgets/chapter_list_sheet.dart';
+import 'widgets/reader_menu.dart';
+import 'widgets/reader_toc.dart';
 import 'source_switch_sheet.dart';
 import '../../../../domain/models/book_source.dart';
 import '../../../../domain/models/chapter.dart';
-import '../../../../providers.dart';
 
 class ReaderPage extends ConsumerStatefulWidget {
   final String bookId;
@@ -107,34 +108,34 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 totalPages: state.totalPages,
                 readerTheme: state.readerTheme,
                 onBack: () {
-                  ref.read(readerProvider(widget.bookId).notifier).toggleMenu();
+                  ref.read(readerProvider.notifier).toggleMenu();
                   context.pop();
                 },
                 onToggleMenu: () {
                   ref
-                      .read(readerProvider(widget.bookId).notifier)
+                      .read(readerProvider.notifier)
                       .toggleMenu();
                 },
                 onShowSettings: () {},
                 onShowChapterList: () => _showChapterList(state),
                 onPreviousChapter: () {
                   ref
-                      .read(readerProvider(widget.bookId).notifier)
+                      .read(readerProvider.notifier)
                       .previousChapter();
                 },
                 onNextChapter: () {
                   ref
-                      .read(readerProvider(widget.bookId).notifier)
+                      .read(readerProvider.notifier)
                       .nextChapter();
                 },
                 onToggleTheme: () {
                   ref
-                      .read(readerProvider(widget.bookId).notifier)
+                      .read(readerProvider.notifier)
                       .cycleTheme();
                 },
                 onToggleMode: () {
                   ref
-                      .read(readerProvider(widget.bookId).notifier)
+                      .read(readerProvider.notifier)
                       .toggleReadMode();
                 },
                 onSwitchSource: () => _showSourceSwitch(state),
@@ -143,7 +144,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                     final pageIndex =
                         (value * (state.totalPages - 1)).round();
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .jumpToPage(pageIndex);
                   }
                 },
@@ -163,22 +164,22 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                   layoutConfig: state.layoutConfig,
                   onIncreaseFontSize: () {
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .increaseFontSize();
                   },
                   onDecreaseFontSize: () {
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .decreaseFontSize();
                   },
                   onIncreaseLineHeight: () {
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .increaseLineHeight();
                   },
                   onDecreaseLineHeight: () {
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .decreaseLineHeight();
                   },
                   onParagraphSpacingChanged: (value) {
@@ -186,7 +187,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       paragraphSpacing: value,
                     );
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .updateLayoutConfig(newConfig);
                   },
                   onMarginChanged: (value) {
@@ -194,7 +195,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       margin: value,
                     );
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .updateLayoutConfig(newConfig);
                   },
                   onLetterSpacingChanged: (value) {
@@ -202,12 +203,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       letterSpacing: value,
                     );
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .updateLayoutConfig(newConfig);
                   },
                   onThemeChanged: (newTheme) {
                     ref
-                        .read(readerProvider(widget.bookId).notifier)
+                        .read(readerProvider.notifier)
                         .setTheme(newTheme);
                   },
                 ),
@@ -317,7 +318,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         theme: state.readerTheme,
         onChapterTap: (index) {
           Navigator.pop(context);
-          ref.read(readerProvider(widget.bookId).notifier).jumpToChapter(index);
+          ref.read(readerProvider.notifier).jumpToChapter(index);
         },
       ),
     );

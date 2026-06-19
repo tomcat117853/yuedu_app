@@ -262,7 +262,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             context: context,
             icon: Icons.info_outline,
             title: '关于',
-            subtitle: '版本 ${AppConstants.appVersion}',
+            subtitle: '版本 ${Constants.version}',
             onTap: () => _showAbout(context),
           ),
         ],
@@ -344,7 +344,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void _setThemeMode(String mode) async {
     try {
       final prefs = ref.read(sharedPreferencesProvider);
-      await prefs.setString(AppConstants.keyThemeMode, mode);
+      await prefs.setString('theme_mode', mode);
     } catch (_) {
       // SharedPreferences 未初始化时忽略
     }
@@ -423,8 +423,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void _showAbout(BuildContext context) {
     showAboutDialog(
       context: context,
-      applicationName: AppConstants.appName,
-      applicationVersion: AppConstants.appVersion,
+      applicationName: Constants.appName,
+      applicationVersion: Constants.version,
       applicationLegalese: '全平台本地阅读App',
     );
   }

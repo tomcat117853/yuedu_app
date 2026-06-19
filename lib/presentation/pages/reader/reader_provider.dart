@@ -6,6 +6,7 @@ import '../../../domain/models/layout_config.dart';
 import '../../../domain/models/reader_state.dart';
 import '../../../domain/models/reader_theme.dart';
 import '../../../domain/services/read_engine.dart';
+import '../../../providers.dart';
 
 final readerProvider = NotifierProvider<ReaderProvider, ReaderState>(
   ReaderProvider.new,
@@ -18,7 +19,7 @@ class ReaderProvider extends Notifier<ReaderState> {
   ReaderState build() {
     _readEngine = ref.read(readEngineProvider);
     return ReaderState(
-      layoutConfig: LayoutConfig.defaultConfig(),
+      layoutConfig: LayoutConfig.defaultConfig,
       readerTheme: ReaderTheme.day(),
     );
   }
@@ -27,23 +28,13 @@ class ReaderProvider extends Notifier<ReaderState> {
   Future<void> loadBook(String bookId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final chapters = await _readEngine.loadBook(bookId);
+      await _readEngine.initReading(bookId, config: state.layoutConfig);
       
-      if (chapters.isEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-        );
-        return;
-      }
-
-      await _readEngine.loadChapter(0);
-      await _readEngine.updateLayoutConfig(state.layoutConfig);
-
       final totalPages = _readEngine.totalPages;
       final pageText = _readEngine.getCurrentPageText();
 
       state = state.copyWith(
-        currentChapterIndex: 0,
+        currentChapterIndex: _readEngine.currentChapterIndex,
         currentPageIndex: 0,
         totalPages: totalPages,
         currentPageText: pageText,

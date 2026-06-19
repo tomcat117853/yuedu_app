@@ -10,6 +10,7 @@ import 'domain/models/source_definition.dart';
 import 'domain/services/book_service.dart';
 import 'domain/services/backup_service.dart';
 import 'domain/services/chapter_cache_service.dart';
+import 'domain/services/read_engine.dart';
 import 'domain/services/source_importer.dart';
 import 'domain/services/source_service.dart';
 import 'domain/services/sync_service.dart';
@@ -44,11 +45,13 @@ final bookServiceProvider = Provider<BookService>((ref) {
 
 /// 备份服务 Provider
 final backupServiceProvider = Provider<BackupService>((ref) {
+  final db = ref.watch(databaseProvider);
   final bookRepo = ref.watch(bookRepositoryProvider);
   final sourceRepo = ref.watch(sourceRepositoryProvider);
   return BackupService(
-    bookRepository: bookRepo,
-    sourceRepository: sourceRepo,
+    db,
+    bookRepo,
+    sourceRepo,
   );
 });
 
@@ -98,6 +101,12 @@ final sourceServiceProvider = Provider<SourceService>((ref) {
   final engine = ref.watch(sourceEngineProvider);
   final matcher = ref.watch(sourceMatcherProvider);
   return SourceService(repo, engine: engine, matcher: matcher);
+});
+
+/// 阅读引擎 Provider
+final readEngineProvider = Provider<ReadEngine>((ref) {
+  final bookRepo = ref.watch(bookRepositoryProvider);
+  return ReadEngine(bookRepo);
 });
 
 /// 文件服务 Provider

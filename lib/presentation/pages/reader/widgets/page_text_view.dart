@@ -17,7 +17,7 @@ class PageTextView extends StatelessWidget {
   });
 
   /// 将 int 转换为 FontWeight
-  static FontWeight _intToFontWeight(int index) {
+  static FontWeight? _intToFontWeight(int index) {
     switch (index) {
       case 1:
         return FontWeight.bold;

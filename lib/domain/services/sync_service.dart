@@ -264,7 +264,7 @@ class SyncService {
             'user_id': _userId,
             'sync_data': dataString,
             'updated_at': DateTime.now().toIso8601String(),
-          }, conflictTarget: 'user_id');
+          });
 
       if (response.error != null) {
         throw Exception(response.error!.message);
@@ -292,7 +292,7 @@ class SyncService {
       final response = await _supabaseClient!
           .from('user_sync')
           .select()
-          .eq('user_id', _userId)
+          .eq('user_id', _userId!)
           .maybeSingle();
 
       if (response == null) {

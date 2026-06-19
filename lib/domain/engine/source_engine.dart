@@ -293,8 +293,8 @@ class SourceEngine {
   Dio _getDio(SourceDefinition source) {
     return _dioCache.putIfAbsent(source.id, () {
       final dio = Dio(BaseOptions(
-        connectTimeout: const Duration(milliseconds: AppConstants.connectTimeout),
-        receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeout),
+        connectTimeout: const Duration(milliseconds: Constants.connectTimeout),
+        receiveTimeout: const Duration(milliseconds: Constants.receiveTimeout),
         followRedirects: true,
         maxRedirects: 5,
         validateStatus: (status) => status != null && status >= 200 && status < 400,
