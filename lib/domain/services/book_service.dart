@@ -1,8 +1,12 @@
+import 'dart:io';
+import 'package:path/path.dart' as p;
+
 import '../models/book.dart';
 import '../models/chapter.dart';
 import '../models/chapter_content.dart';
 import '../models/read_progress.dart';
 import '../../data/repositories/book_repository.dart';
+import '../../data/parsers/txt_parser.dart';
 
 /// 书籍服务 - 处理书籍相关的业务逻辑
 class BookService {
@@ -44,6 +48,99 @@ class BookService {
       category: category,
     );
     await _bookRepository.insertBook(book);
+    return book;
+  }
+
+  /// 导入书籍（根据文件类型解析并添加到书架）
+  Future<Book> importBook(String filePath) async {
+    final file = File(filePath);
+    if (!await file.exists()) {
+      throw Exception('文件不存在: $filePath');
+    }
+
+    final extension = p.extension(filePath).toLowerCase().replaceFirst('.', '');
+    final fileName = p.basenameWithoutExtension(filePath);
+
+    // 生成书籍ID（提前生成，确保书籍和章节ID一致）
+    final bookId = _bookRepository.generateId();
+
+    // 解析文件获取书籍信息
+    List<Chapter> chapters = [];
+    String? intro;
+    int wordCount = 0;
+
+    if (extension == 'txt') {
+      final parser = TxtParser();
+      chapters = await parser.parseFile(filePath, bookId);
+      wordCount = chapters.fold(0, (sum, ch) => sum + (ch.wordCount ?? 0));
+    } else if (extension == 'epub') {
+      // EPUB解析暂时使用简化逻辑
+      chapters = [
+        Chapter(
+          id: '${bookId}_ch_0',
+          bookId: bookId,
+          title: '目录',
+          orderIndex: 0,
+        ),
+      ];
+    } else if (extension == 'pdf') {
+      chapters = [
+        Chapter(
+          id: '${bookId}_ch_0',
+          bookId: bookId,
+          title: '首页',
+          orderIndex: 0,
+        ),
+      ];
+    } else {
+      throw Exception('不支持的文件格式: $extension');
+    }
+
+    // 解析书名和作者（假设格式为 "书名 - 作者" 或直接是 "书名"）
+    String title = fileName;
+    String author = '未知作者';
+
+    if (fileName.contains(' - ')) {
+      final parts = fileName.split(' - ');
+      if (parts.length >= 2) {
+        title = parts[0].trim();
+        author = parts.sublist(1).join(', ').trim();
+      }
+    }
+
+    // 创建书籍记录
+    final book = Book(
+      id: bookId,
+      title: title,
+      author: author,
+      localPath: filePath,
+      format: extension,
+      type: 'local',
+      intro: intro,
+      totalChapters: chapters.length,
+      wordCount: wordCount,
+    );
+
+    // 更新章节的bookId
+    final updatedChapters = chapters.map((ch) => Chapter(
+      id: '${bookId}_ch_${ch.orderIndex}',
+      bookId: bookId,
+      title: ch.title,
+      orderIndex: ch.orderIndex,
+      chapterKey: ch.chapterKey,
+      contentPath: ch.contentPath,
+      isCached: ch.isCached,
+      isVip: ch.isVip,
+      wordCount: ch.wordCount,
+      fetchedAt: ch.fetchedAt,
+    )).toList();
+
+    // 保存书籍和章节
+    await _bookRepository.insertBook(book);
+    if (updatedChapters.isNotEmpty) {
+      await _bookRepository.insertChapters(updatedChapters);
+    }
+
     return book;
   }
 
