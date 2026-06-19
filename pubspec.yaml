@@ -48,6 +48,12 @@ dependencies:
   # 分享
   share_plus: ^10.0.0
 
+  # TTS 语音朗读
+  flutter_tts: ^4.0.2
+
+  # 云同步 (Supabase)
+  supabase: ^2.5.10
+
   # 代码生成注解
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0

@@ -96,7 +96,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: 16),
 
             // 阅读统计
-            _buildReadingStats(),
+            _buildReadingStats(context),
             const SizedBox(height: 16),
 
             // 设置列表
@@ -109,12 +109,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 用户信息卡片
   Widget _buildUserCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+        gradient: LinearGradient(
+          colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -161,7 +162,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   /// 阅读统计
-  Widget _buildReadingStats() {
+  Widget _buildReadingStats(BuildContext context) {
     if (_isLoadingStats) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
@@ -173,9 +174,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          _buildStatItem('$_readingCount', '在读'),
-          _buildStatItem('$_finishedCount', '已读完'),
+          _buildStatItem(context, '$_readingCount', '在读'),
+          _buildStatItem(context, '$_finishedCount', '已读完'),
           _buildStatItem(
+            context,
             _formatDuration(_totalReadingMinutes),
             '总阅读时长',
           ),
@@ -185,24 +187,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   /// 统计项
-  Widget _buildStatItem(String value, String label) {
+  Widget _buildStatItem(BuildContext context, String value, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Column(
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -212,15 +215,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 设置列表
   Widget _buildSettingsList(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           _buildSettingItem(
+            context: context,
             icon: Icons.palette_outlined,
             title: '阅读主题',
             subtitle: Theme.of(context).brightness == Brightness.dark
@@ -230,6 +235,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
+            context: context,
             icon: Icons.text_fields,
             title: '字体设置',
             subtitle: '系统默认',
@@ -237,6 +243,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
+            context: context,
             icon: Icons.download_outlined,
             title: '缓存管理',
             subtitle: '已使用 ${_formatCacheSize(_cacheSize)}',
@@ -244,6 +251,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
+            context: context,
             icon: Icons.backup_outlined,
             title: '数据备份',
             subtitle: '本地备份',
@@ -251,6 +259,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
+            context: context,
             icon: Icons.info_outline,
             title: '关于',
             subtitle: '版本 ${AppConstants.appVersion}',
@@ -269,16 +278,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 设置项
   Widget _buildSettingItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryColor),
+      leading: Icon(icon, color: colorScheme.primary),
       title: Text(title),
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-      trailing: const Icon(Icons.chevron_right, color: AppTheme.textHint),
+      trailing: Icon(Icons.chevron_right, color: Theme.of(context).hintColor),
       onTap: onTap,
     );
   }
@@ -343,27 +354,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 字体设置
   void _showFontSettings(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('字体设置'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               title: const Text('系统默认'),
-              leading: const Icon(Icons.check, color: AppTheme.primaryColor),
-              onTap: () => Navigator.pop(context),
+              leading: Icon(Icons.check, color: colorScheme.primary),
+              onTap: () => Navigator.pop(dialogContext),
             ),
             ListTile(
               title: const Text('思源宋体'),
               leading: const Icon(Icons.circle_outlined),
-              onTap: () => Navigator.pop(context),
+              onTap: () => Navigator.pop(dialogContext),
             ),
             ListTile(
               title: const Text('方正楷体'),
               leading: const Icon(Icons.circle_outlined),
-              onTap: () => Navigator.pop(context),
+              onTap: () => Navigator.pop(dialogContext),
             ),
           ],
         ),

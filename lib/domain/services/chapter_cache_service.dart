@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../data/repositories/book_repository.dart';
 import '../../data/repositories/source_repository.dart';
 import '../../domain/models/source_definition.dart';
-import '../../domain/engine/source_engine.dart';
+import '../engine/source_engine.dart';
 import '../../domain/models/book_source.dart';
 import '../../domain/models/book_source_protocol.dart';
 import '../../platform/file_service.dart';
@@ -105,7 +105,7 @@ class ChapterCacheService {
       ) as SourceChapterContent;
 
       // 保存到文件缓存
-      final plainText = content.plainText;
+      final plainText = content.content;
       if (plainText.isNotEmpty) {
         await fileService.saveChapterContent(bookId, chapterIndex, plainText);
         _cacheIndex['${bookId}_$chapterIndex'] = DateTime.now();
@@ -161,7 +161,7 @@ class ChapterCacheService {
       chapterKey,
     );
 
-    final plainText = content.plainText;
+    final plainText = content.content;
     if (plainText.isNotEmpty) {
       await fileService.saveChapterContent(bookId, chapterIndex, plainText);
       _cacheIndex['${bookId}_$chapterIndex'] = DateTime.now();

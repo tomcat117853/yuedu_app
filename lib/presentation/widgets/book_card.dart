@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../config/theme.dart';
 import '../../domain/models/book.dart';
 import '../../domain/models/read_progress.dart';
 
@@ -21,6 +20,7 @@ class BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -102,8 +102,8 @@ class BookCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: progress!.progressPercent / 100,
                           backgroundColor: Colors.black26,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppTheme.primaryColor,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            colorScheme.primary,
                           ),
                           minHeight: 3,
                         ),
@@ -157,9 +157,9 @@ class BookCard extends StatelessWidget {
           // 作者
           Text(
             book.author,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

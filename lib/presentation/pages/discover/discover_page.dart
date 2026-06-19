@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../config/theme.dart';
 import '../../../domain/models/source_definition.dart';
 import '../../../providers.dart';
 import 'discover_provider.dart';
@@ -79,15 +78,16 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
     }
 
     if (recommendations.isEmpty) {
+      final theme = Theme.of(context);
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.explore_outlined,
-                size: 80, color: AppTheme.textHint),
+            Icon(Icons.explore_outlined,
+                size: 80, color: theme.hintColor),
             const SizedBox(height: 16),
-            const Text('暂无推荐，请先添加书源',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            Text('暂无推荐，请先添加书源',
+                style: TextStyle(color: theme.hintColor)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -125,11 +125,11 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
         _buildSectionHeader('热度榜'),
         const SizedBox(height: 12),
         if (recommendations.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
+              padding: const EdgeInsets.all(32),
               child: Text('暂无数据，请先添加书源',
-                  style: TextStyle(color: AppTheme.textSecondary)),
+                  style: TextStyle(color: Theme.of(context).hintColor)),
             ),
           )
         else
@@ -304,12 +304,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   errorWidget: (_, __, ___) => Container(
-                                    color: AppTheme.dividerColor,
+                                    color: Theme.of(context).dividerColor,
                                     child: const Icon(Icons.book, size: 40),
                                   ),
                                 )
                               : Container(
-                                  color: AppTheme.dividerColor,
+                                  color: Theme.of(context).dividerColor,
                                   child: const Center(
                                     child: Icon(Icons.book, size: 40),
                                   ),
@@ -376,14 +376,14 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: index < 3 ? AppTheme.accentColor : AppTheme.dividerColor,
+              color: index < 3 ? Theme.of(context).colorScheme.secondary : Theme.of(context).dividerColor,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 '${index + 1}',
                 style: TextStyle(
-                  color: index < 3 ? Colors.white : AppTheme.textSecondary,
+                  color: index < 3 ? Colors.white : Theme.of(context).hintColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -407,12 +407,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
                 imageUrl: coverUrl,
                 fit: BoxFit.cover,
                 errorWidget: (_, __, ___) => Container(
-                  color: AppTheme.dividerColor,
+                  color: Theme.of(context).dividerColor,
                   child: const Icon(Icons.book, size: 24),
                 ),
               )
             : Container(
-                color: AppTheme.dividerColor,
+                color: Theme.of(context).dividerColor,
                 child: const Icon(Icons.book, size: 24),
               ),
       ),

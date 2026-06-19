@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 /// TTS（文字转语音）服务
 ///
 /// 提供文本转语音功能，支持语速调节、自动翻页。
-/// 实际集成需要添加 flutter_tts 依赖到 pubspec.yaml。
 class TtsService {
+  late final FlutterTts _flutterTts;
+
   /// 是否正在播放
   bool _isPlaying = false;
   bool get isPlaying => _isPlaying;
@@ -41,14 +43,35 @@ class TtsService {
   /// 初始化 TTS 引擎
   Future<void> init() async {
     try {
-      // TODO: 初始化 flutter_tts
-      // await _flutterTts.setLanguage(_language);
-      // await _flutterTts.setSpeechRate(_speechRate);
-      // await _flutterTts.setPitch(_pitch);
-      // await _flutterTts.setCompletionHandler(_onComplete);
-      // await _flutterTts.setProgressHandler(_onProgress);
-      // await _flutterTts.setErrorHandler(_onError);
-      debugPrint('[TtsService] 初始化完成（待集成 flutter_tts）');
+      _flutterTts = FlutterTts();
+
+      // 配置 TTS 参数
+      await _flutterTts.setLanguage(_language);
+      await _flutterTts.setSpeechRate(_speechRate);
+      await _flutterTts.setPitch(_pitch);
+
+      // 设置回调处理器
+      _flutterTts.setCompletionHandler(() {
+        _isPlaying = false;
+        _currentOffset = 0;
+        onCompleted?.call();
+      });
+
+      _flutterTts.setProgressHandler((text, start, end, word) {
+        _currentOffset = end;
+        onProgressChanged?.call(end);
+      });
+
+      _flutterTts.setErrorHandler((error) {
+        _isPlaying = false;
+        onError?.call(error.toString());
+      });
+
+      _flutterTts.setCancelHandler(() {
+        _isPlaying = false;
+      });
+
+      debugPrint('[TtsService] 初始化完成');
     } catch (e) {
       debugPrint('[TtsService] 初始化失败: $e');
     }
@@ -64,12 +87,8 @@ class TtsService {
 
     try {
       final textToSpeak = text.substring(startOffset);
-      // TODO: 调用 flutter_tts.speak()
-      // await _flutterTts.speak(textToSpeak);
+      await _flutterTts.speak(textToSpeak);
       debugPrint('[TtsService] 开始朗读 (offset: $startOffset)');
-
-      // 模拟进度更新（实际由 TTS 引擎回调驱动）
-      _simulateProgress(textToSpeak.length);
     } catch (e) {
       _isPlaying = false;
       onError?.call(e.toString());
@@ -79,7 +98,7 @@ class TtsService {
   /// 暂停朗读
   Future<void> pause() async {
     _isPlaying = false;
-    // TODO: await _flutterTts.pause();
+    await _flutterTts.pause();
     debugPrint('[TtsService] 暂停');
   }
 
@@ -87,7 +106,7 @@ class TtsService {
   Future<void> resume() async {
     if (_currentText.isEmpty) return;
     _isPlaying = true;
-    // TODO: await _flutterTts.speak(_currentText.substring(_currentOffset));
+    await _flutterTts.speak(_currentText.substring(_currentOffset));
     debugPrint('[TtsService] 恢复朗读 (offset: $_currentOffset)');
   }
 
@@ -96,38 +115,32 @@ class TtsService {
     _isPlaying = false;
     _currentText = '';
     _currentOffset = 0;
-    // TODO: await _flutterTts.stop();
+    await _flutterTts.stop();
     debugPrint('[TtsService] 停止');
   }
 
   /// 设置语速
   Future<void> setSpeechRate(double rate) async {
     _speechRate = rate.clamp(0.5, 2.0);
-    // TODO: await _flutterTts.setSpeechRate(_speechRate);
+    await _flutterTts.setSpeechRate(_speechRate);
   }
 
   /// 设置音调
   Future<void> setPitch(double pitch) async {
     _pitch = pitch.clamp(0.5, 2.0);
-    // TODO: await _flutterTts.setPitch(_pitch);
+    await _flutterTts.setPitch(_pitch);
   }
 
   /// 设置语言
   Future<void> setLanguage(String lang) async {
     _language = lang;
-    // TODO: await _flutterTts.setLanguage(_language);
+    await _flutterTts.setLanguage(_language);
   }
 
   /// 获取可用语言列表
   Future<List<String>> getAvailableLanguages() async {
-    // TODO: return await _flutterTts.getLanguages;
-    return ['zh-CN', 'zh-TW', 'en-US', 'ja-JP'];
-  }
-
-  /// 模拟进度更新（实际由 TTS 引擎回调驱动）
-  void _simulateProgress(int textLength) {
-    // 实际集成时由 flutter_tts 的 setProgressHandler 驱动
-    // 这里仅作为接口预留
+    final languages = await _flutterTts.getLanguages;
+    return languages.cast<String>();
   }
 
   /// 释放资源

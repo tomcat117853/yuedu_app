@@ -190,13 +190,14 @@ class _SourceSwitchSheetState extends ConsumerState<SourceSwitchSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
-      decoration: const BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -247,7 +248,7 @@ class _SourceSwitchSheetState extends ConsumerState<SourceSwitchSheet> {
                   final isCurrent = widget.currentSources.any(
                     (s) => s.sourceId == source.sourceId,
                   );
-                  return _buildSourceItem(source, isCurrent);
+                  return _buildSourceItem(context, source, isCurrent);
                 },
               ),
             ),
@@ -256,7 +257,8 @@ class _SourceSwitchSheetState extends ConsumerState<SourceSwitchSheet> {
     );
   }
 
-  Widget _buildSourceItem(BookSource source, bool isCurrent) {
+  Widget _buildSourceItem(BuildContext context, BookSource source, bool isCurrent) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ListTile(
       title: Text(
         source.sourceName,
@@ -267,12 +269,12 @@ class _SourceSwitchSheetState extends ConsumerState<SourceSwitchSheet> {
       subtitle: Text(
         '章节: ${source.chapterCount > 0 ? source.chapterCount : "未知"} | '
         '置信度: ${(source.confidence * 100).toInt()}%',
-        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
       ),
       trailing: isCurrent
-          ? const Chip(
-              label: Text('当前', style: TextStyle(fontSize: 11)),
-              backgroundColor: AppTheme.primaryColor,
+          ? Chip(
+              label: const Text('当前', style: TextStyle(fontSize: 11)),
+              backgroundColor: colorScheme.primary,
               padding: EdgeInsets.zero,
             )
           : const Icon(Icons.swap_horiz),

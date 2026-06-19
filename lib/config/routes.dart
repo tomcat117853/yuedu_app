@@ -1,4 +1,3 @@
-class Routes {
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/pages/bookshelf/bookshelf_page.dart';
@@ -9,20 +8,20 @@ import '../presentation/pages/source/source_page.dart';
 import '../presentation/pages/profile/profile_page.dart';
 import '../presentation/pages/profile/backup_page.dart';
 
-/// 应用路由配置
+/// 路由路径常量
 class AppRoutes {
+  AppRoutes._();
+
   // 路由路径
   static const String bookshelf = '/bookshelf';
   static const String discover = '/discover';
   static const String source = '/source';
   static const String profile = '/profile';
   static const String reader = '/reader';
-  static const String backup = '/backup';
-  static const String settings = '/settings';
-}
   static const String bookDetail = '/book-detail';
   static const String pdfReader = '/pdf-reader';
   static const String backup = '/backup';
+  static const String settings = '/settings';
 
   // 路由参数名
   static const String bookIdParam = 'bookId';
@@ -55,18 +54,18 @@ GoRouter createRouter() {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.source,
-                name: 'source',
-                builder: (context, state) => const SourcePage(),
+                path: AppRoutes.discover,
+                name: 'discover',
+                builder: (context, state) => const DiscoverPage(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.discover,
-                name: 'discover',
-                builder: (context, state) => const DiscoverPage(),
+                path: AppRoutes.source,
+                name: 'source',
+                builder: (context, state) => const SourcePage(),
               ),
             ],
           ),
@@ -85,7 +84,7 @@ GoRouter createRouter() {
         path: AppRoutes.reader,
         name: 'reader',
         builder: (context, state) {
-          final bookId = state.pathParameters[AppRoutes.bookIdParam]!;
+          final bookId = state.uri.queryParameters['bookId'] ?? '';
           return ReaderPage(bookId: bookId);
         },
       ),
@@ -130,14 +129,14 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: '书架',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.source_outlined),
-            activeIcon: Icon(Icons.source),
-            label: '书源',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.explore_outlined),
             activeIcon: Icon(Icons.explore),
             label: '发现',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.source_outlined),
+            activeIcon: Icon(Icons.source),
+            label: '书源',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:supabase/supabase.dart';
 import '../../data/repositories/book_repository.dart';
 import '../../data/repositories/source_repository.dart';
 import '../../domain/models/book.dart';
@@ -86,6 +87,12 @@ class SyncService {
   String? _lastError;
   String? get lastError => _lastError;
 
+  /// Supabase 客户端
+  SupabaseClient? _supabaseClient;
+
+  /// 用户ID
+  String? _userId;
+
   /// 同步回调
   void Function(SyncStatus status)? onStatusChanged;
 
@@ -93,6 +100,24 @@ class SyncService {
     required this.bookRepository,
     required this.sourceRepository,
   });
+
+  /// 初始化 Supabase 客户端
+  Future<void> init({
+    required String supabaseUrl,
+    required String supabaseAnonKey,
+  }) async {
+    try {
+      _supabaseClient = SupabaseClient(supabaseUrl, supabaseAnonKey);
+      debugPrint('[SyncService] Supabase 客户端初始化成功');
+    } catch (e) {
+      debugPrint('[SyncService] Supabase 客户端初始化失败: $e');
+    }
+  }
+
+  /// 设置用户ID
+  void setUserId(String userId) {
+    _userId = userId;
+  }
 
   /// 生成本地同步数据（导出）
   Future<SyncPayload> exportSyncData() async {
@@ -221,17 +246,88 @@ class SyncService {
     onStatusChanged?.call(status);
   }
 
-  /// 预留：上传到远程服务器（Supabase BaaS 接口）
+  /// 上传到远程服务器（Supabase BaaS）
   Future<void> uploadToRemote(SyncPayload payload) async {
-    // TODO: 实现 Supabase 或其他 BaaS 上传
-    debugPrint('[SyncService] 上传到远程服务器（待实现）');
+    if (_supabaseClient == null || _userId == null) {
+      throw Exception('Supabase 客户端未初始化或用户未登录');
+    }
+
+    try {
+      _setStatus(SyncStatus.syncing);
+
+      final dataString = payload.toJsonString();
+
+      // 上传到 Supabase
+      final response = await _supabaseClient!
+          .from('user_sync')
+          .upsert({
+            'user_id': _userId,
+            'sync_data': dataString,
+            'updated_at': DateTime.now().toIso8601String(),
+          }, conflictTarget: 'user_id');
+
+      if (response.error != null) {
+        throw Exception(response.error!.message);
+      }
+
+      _lastSyncTime = DateTime.now();
+      _setStatus(SyncStatus.success);
+      debugPrint('[SyncService] 上传到远程服务器成功');
+    } catch (e) {
+      _lastError = e.toString();
+      _setStatus(SyncStatus.error);
+      rethrow;
+    }
   }
 
-  /// 预留：从远程服务器下载
+  /// 从远程服务器下载
   Future<SyncPayload?> downloadFromRemote() async {
-    // TODO: 实现 Supabase 或其他 BaaS 下载
-    debugPrint('[SyncService] 从远程服务器下载（待实现）');
-    return null;
+    if (_supabaseClient == null || _userId == null) {
+      throw Exception('Supabase 客户端未初始化或用户未登录');
+    }
+
+    try {
+      _setStatus(SyncStatus.syncing);
+
+      final response = await _supabaseClient!
+          .from('user_sync')
+          .select()
+          .eq('user_id', _userId)
+          .maybeSingle();
+
+      if (response == null) {
+        _setStatus(SyncStatus.success);
+        return null;
+      }
+
+      final syncData = response['sync_data'] as String;
+      final payload = SyncPayload.fromJsonString(syncData);
+
+      _lastSyncTime = DateTime.now();
+      _setStatus(SyncStatus.success);
+      debugPrint('[SyncService] 从远程服务器下载成功');
+
+      return payload;
+    } catch (e) {
+      _lastError = e.toString();
+      _setStatus(SyncStatus.error);
+      rethrow;
+    }
+  }
+
+  /// 一键同步：下载远程数据并合并
+  Future<SyncResult> syncWithRemote({
+    ConflictStrategy strategy = ConflictStrategy.keepLatest,
+  }) async {
+    final remotePayload = await downloadFromRemote();
+    if (remotePayload == null) {
+      // 没有远程数据，上传本地数据
+      final localPayload = await exportSyncData();
+      await uploadToRemote(localPayload);
+      return SyncResult(booksAdded: 0, booksUpdated: 0, progressUpdated: 0);
+    }
+
+    return importSyncData(remotePayload, strategy: strategy);
   }
 }
 

@@ -12,6 +12,8 @@ import 'domain/services/book_service.dart';
 import 'domain/services/chapter_cache_service.dart';
 import 'domain/services/source_importer.dart';
 import 'domain/services/source_service.dart';
+import 'domain/services/sync_service.dart';
+import 'domain/services/tts_service.dart';
 import 'platform/file_service.dart';
 import 'platform/path_service.dart';
 
@@ -133,3 +135,20 @@ class SourceDefinitionsNotifier extends StateNotifier<List<SourceDefinition>> {
     state = sources;
   }
 }
+
+/// TTS 服务 Provider
+final ttsServiceProvider = Provider<TtsService>((ref) {
+  final service = TtsService();
+  ref.onDispose(() => service.dispose());
+  return service;
+});
+
+/// 同步服务 Provider
+final syncServiceProvider = Provider<SyncService>((ref) {
+  final bookRepository = ref.watch(bookRepositoryProvider);
+  final sourceRepository = ref.watch(sourceRepositoryProvider);
+  return SyncService(
+    bookRepository: bookRepository,
+    sourceRepository: sourceRepository,
+  );
+});

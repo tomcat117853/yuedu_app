@@ -87,9 +87,9 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
               onSelected: (_) {
                 ref.read(bookshelfProvider.notifier).switchGroup(group['id']!);
               },
-              selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+              selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
               labelStyle: TextStyle(
-                color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+                color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).hintColor,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -123,6 +123,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     }
 
     if (state.books.isEmpty) {
+      final theme = Theme.of(context);
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -130,21 +131,21 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             Icon(
               Icons.menu_book_outlined,
               size: 80,
-              color: AppTheme.textHint.withValues(alpha: 0.5),
+              color: theme.hintColor.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               '书架空空如也',
               style: TextStyle(
-                color: AppTheme.textHint,
+                color: theme.hintColor,
                 fontSize: 16,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '点击右上角添加书籍',
               style: TextStyle(
-                color: AppTheme.textHint,
+                color: theme.hintColor,
                 fontSize: 14,
               ),
             ),
@@ -163,10 +164,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             .toList();
 
     if (filteredBooks.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           '没有找到匹配的书籍',
-          style: TextStyle(color: AppTheme.textHint),
+          style: TextStyle(color: Theme.of(context).hintColor),
         ),
       );
     }

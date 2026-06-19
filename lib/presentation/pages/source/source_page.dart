@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../config/theme.dart';
 import '../../../domain/services/source_importer.dart';
 import '../../../providers.dart';
 import 'source_provider.dart';
@@ -40,6 +39,7 @@ class _SourcePageState extends ConsumerState<SourcePage> {
 
   /// 空状态
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -47,17 +47,17 @@ class _SourcePageState extends ConsumerState<SourcePage> {
           Icon(
             Icons.source_outlined,
             size: 80,
-            color: AppTheme.textHint.withValues(alpha: 0.5),
+            color: theme.hintColor.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             '暂无书源',
-            style: TextStyle(color: AppTheme.textHint, fontSize: 16),
+            style: TextStyle(color: theme.hintColor, fontSize: 16),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '点击右上角 + 添加或通过菜单导入',
-            style: TextStyle(color: AppTheme.textHint, fontSize: 13),
+            style: TextStyle(color: theme.hintColor, fontSize: 13),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
@@ -123,8 +123,8 @@ class _SourcePageState extends ConsumerState<SourcePage> {
                   ),
                   subtitle: Text(
                     source.bookSourceUrl,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppTheme.textHint),
+                    style: TextStyle(
+                        fontSize: 12, color: Theme.of(context).hintColor),
                   ),
                   secondary: source.bookSourceGroup.isNotEmpty
                       ? Chip(

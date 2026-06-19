@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../config/theme.dart';
 
 /// 通用组件集合
 
@@ -11,18 +10,19 @@ class LoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
-            color: AppTheme.primaryColor,
+          CircularProgressIndicator(
+            color: colorScheme.primary,
           ),
           if (message != null) ...[
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
           ],
         ],
@@ -50,6 +50,7 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -59,23 +60,23 @@ class EmptyStateWidget extends StatelessWidget {
             Icon(
               icon,
               size: 64,
-              color: AppTheme.textHint.withValues(alpha: 0.5),
+              color: colorScheme.outline.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppTheme.textHint,
+                  color: colorScheme.outline,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -103,23 +104,24 @@ class ErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 48,
-              color: AppTheme.errorColor,
+              color: colorScheme.error,
             ),
             const SizedBox(height: 16),
             Text(
               message,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.errorColor,
+                color: colorScheme.error,
               ),
               textAlign: TextAlign.center,
             ),
@@ -188,14 +190,15 @@ class LabeledText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: labelStyle ??
-              const TextStyle(
-                color: AppTheme.textSecondary,
+              TextStyle(
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 13,
               ),
         ),
@@ -223,20 +226,21 @@ Future<bool?> showConfirmDialog({
   String cancelText = '取消',
   bool isDangerous = false,
 }) {
+  final colorScheme = Theme.of(context).colorScheme;
   return showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (dialogContext) => AlertDialog(
       title: Text(title),
       content: Text(content),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context, false),
+          onPressed: () => Navigator.pop(dialogContext, false),
           child: Text(cancelText),
         ),
         TextButton(
-          onPressed: () => Navigator.pop(context, true),
+          onPressed: () => Navigator.pop(dialogContext, true),
           style: isDangerous
-              ? TextButton.styleFrom(foregroundColor: AppTheme.errorColor)
+              ? TextButton.styleFrom(foregroundColor: colorScheme.error)
               : null,
           child: Text(confirmText),
         ),

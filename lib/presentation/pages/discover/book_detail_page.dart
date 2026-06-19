@@ -112,23 +112,25 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _buildError()
-              : _buildContent(),
+              ? _buildError(context)
+              : _buildContent(context, colorScheme),
     );
   }
 
-  Widget _buildError() {
+  Widget _buildError(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: AppTheme.textHint),
+          Icon(Icons.error_outline, size: 64, color: colorScheme.outline),
           const SizedBox(height: 16),
-          Text(_error!, style: const TextStyle(color: AppTheme.textSecondary)),
+          Text(_error!, style: TextStyle(color: colorScheme.onSurfaceVariant)),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
@@ -145,7 +147,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context, ColorScheme colorScheme) {
     final detail = _detail;
     if (detail == null) return const SizedBox.shrink();
 
@@ -162,8 +164,8 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppTheme.primaryColor.withValues(alpha: 0.8),
-                    AppTheme.primaryDark,
+                    colorScheme.primary.withValues(alpha: 0.8),
+                    colorScheme.primary,
                   ],
                 ),
               ),
@@ -173,7 +175,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     // 封面
-                    _buildCover(detail.coverUrl),
+                    _buildCover(detail.coverUrl, colorScheme),
                     const SizedBox(width: 16),
                     // 书籍信息
                     Expanded(
@@ -248,8 +250,8 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   const SizedBox(height: 8),
                   Text(
                     detail.intro,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       height: 1.6,
                     ),
@@ -300,8 +302,8 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 if (_chapters.isNotEmpty)
                   Text(
                     '最新: ${_chapters.last.title}',
-                    style: const TextStyle(
-                      color: AppTheme.textHint,
+                    style: TextStyle(
+                      color: colorScheme.outline,
                       fontSize: 12,
                     ),
                     maxLines: 1,
@@ -327,10 +329,10 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 trailing: chapter.isVip
-                    ? const Text(
+                    ? Text(
                         'VIP',
                         style: TextStyle(
-                          color: AppTheme.accentColor,
+                          color: colorScheme.secondary,
                           fontSize: 11,
                         ),
                       )
@@ -346,7 +348,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
     );
   }
 
-  Widget _buildCover(String? coverUrl) {
+  Widget _buildCover(String? coverUrl, ColorScheme colorScheme) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: SizedBox(
@@ -357,16 +359,16 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 imageUrl: coverUrl,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
-                  color: AppTheme.dividerColor,
+                  color: colorScheme.outlineVariant,
                   child: const Center(child: CircularProgressIndicator()),
                 ),
                 errorWidget: (context, url, error) => Container(
-                  color: AppTheme.dividerColor,
+                  color: colorScheme.outlineVariant,
                   child: const Icon(Icons.book, size: 40),
                 ),
               )
             : Container(
-                color: AppTheme.dividerColor,
+                color: colorScheme.outlineVariant,
                 child: const Icon(Icons.book, size: 40),
               ),
       ),
