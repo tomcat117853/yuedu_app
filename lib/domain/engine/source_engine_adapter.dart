@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/book_source_protocol.dart';
 import '../models/search_result.dart';
+import '../models/source_definition.dart';
 import 'source_engine.dart';
 
 class SourceEngineAdapter implements BookSourceProtocol {

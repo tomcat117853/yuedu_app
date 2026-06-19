@@ -9,7 +9,7 @@ class YueDuApp extends ConsumerStatefulWidget {
   const YueDuApp({super.key});
 
   @override
-  ConsumerState<YueduApp> createState() => _YueduAppState();
+  ConsumerState<YueDuApp> createState() => _YueDuAppState();
 }
 
 class _YueDuAppState extends ConsumerState<YueDuApp> {

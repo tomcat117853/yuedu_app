@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../providers.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:go_router/go_router.dart';
+import '../../../providers.dart';
+import '../../../config/routes.dart';
 import '../reader/reader_page.dart';
 import 'bookshelf_provider.dart';
 import 'widgets/book_card.dart';
-import 'widgets/group_list.dart';
 
 class BookshelfPage extends ConsumerStatefulWidget {
   const BookshelfPage({super.key});
@@ -19,7 +20,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(bookshelfProvider.notifier).loadBooks();
+      ref.read(bookshelfProvider.notifier).refresh();
     });
   }
 
@@ -41,66 +42,25 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         title: const Text('我的书架'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => _showSearch(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => ref.read(bookshelfProvider.notifier).importBook(),
+            onPressed: () => _showAddBookDialog(context),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // 分组标签栏
-          _buildGroupTabs(context, ref, groups, state.currentGroup),
-          // 书籍列表
-          Expanded(
-            child: _buildBookList(context, ref, state),
-          ),
-        ],
-      ),
+      body: _buildBookList(context, state),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddBookDialog(context, ref),
+        onPressed: () => _showAddBookDialog(context),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  /// 构建分组标签栏
-  Widget _buildGroupTabs(
-    BuildContext context,
-    WidgetRef ref,
-    List<Map<String, String>> groups,
-    String currentGroup,
-  ) {
-    return SizedBox(
-      height: 48,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: groups.length,
-        itemBuilder: (context, index) {
-          final group = groups[index];
-          final isSelected = group['id'] == currentGroup;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(group['name']!),
-              selected: isSelected,
-              onSelected: (_) {
-                ref.read(bookshelfProvider.notifier).switchGroup(group['id']!);
-              },
-              selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-              labelStyle: TextStyle(
-                color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).hintColor,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   /// 构建书籍列表
-  Widget _buildBookList(BuildContext context, WidgetRef ref, BookshelfState state) {
+  Widget _buildBookList(BuildContext context, BookshelfState state) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -113,8 +73,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             Text(state.error!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () =>
-                  ref.read(bookshelfProvider.notifier).refresh(),
+              onPressed: () => ref.read(bookshelfProvider.notifier).refresh(),
               child: const Text('重试'),
             ),
           ],
@@ -131,43 +90,19 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             Icon(
               Icons.menu_book_outlined,
               size: 80,
-              color: theme.hintColor.withValues(alpha: 0.5),
+              color: theme.hintColor.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
               '书架空空如也',
-              style: TextStyle(
-                color: theme.hintColor,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: theme.hintColor, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
               '点击右上角添加书籍',
-              style: TextStyle(
-                color: theme.hintColor,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: theme.hintColor, fontSize: 14),
             ),
           ],
-        ),
-      );
-    }
-
-    // 过滤搜索结果
-    final filteredBooks = state.searchQuery.isEmpty
-        ? state.books
-        : state.books
-            .where((book) =>
-                book.title.contains(state.searchQuery) ||
-                book.author.contains(state.searchQuery))
-            .toList();
-
-    if (filteredBooks.isEmpty) {
-      return Center(
-        child: Text(
-          '没有找到匹配的书籍',
-          style: TextStyle(color: Theme.of(context).hintColor),
         ),
       );
     }
@@ -182,17 +117,12 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 16,
         ),
-        itemCount: filteredBooks.length,
+        itemCount: state.books.length,
         itemBuilder: (context, index) {
-          final book = filteredBooks[index];
-          final progress = state.progressMap[book.id];
+          final book = state.books[index];
           return BookCard(
             book: book,
-            progress: progress,
-            onTap: () {
-              context.push('/reader/${book.id}');
-            },
-            onLongPress: () => _showBookOptions(context, ref, book),
+            onTap: () => _onBookTap(book.id),
           );
         },
       ),
@@ -200,15 +130,38 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   }
 
   /// 显示搜索
-  void _showSearch(BuildContext context, WidgetRef ref) {
-    showSearch(
+  void _showSearch(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
       context: context,
-      delegate: _BookSearchDelegate(ref),
+      builder: (context) => AlertDialog(
+        title: const Text('搜索书籍'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: '输入书名或作者',
+            prefixIcon: Icon(Icons.search),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(bookshelfProvider.notifier).search(controller.text);
+              Navigator.pop(context);
+            },
+            child: const Text('搜索'),
+          ),
+        ],
+      ),
     );
   }
 
   /// 显示添加书籍对话框
-  void _showAddBookDialog(BuildContext context, WidgetRef ref) {
+  void _showAddBookDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -232,7 +185,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
                 subtitle: const Text('支持 TXT、EPUB 格式'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await _importLocalFile(context, ref);
+                  await _importLocalFile(context);
                 },
               ),
               ListTile(
@@ -253,41 +206,44 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   }
 
   /// 导入本地文件
-  Future<void> _importLocalFile(BuildContext context, WidgetRef ref) async {
+  Future<void> _importLocalFile(BuildContext context) async {
     try {
-      // 打开文件选择器，限制为 TXT 和 EPUB 格式
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['txt', 'epub'],
       );
 
-      if (result == null || result.files.isEmpty) {
-        // 用户取消了选择
-        return;
-      }
+      if (result == null || result.files.isEmpty) return;
 
       final filePath = result.files.single.path;
       if (filePath == null) return;
 
-      // 显示加载指示器对话框
-      if (!context.mounted) return;
+      // 显示加载指示器
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const PopScope(
-          canPop: false,
-          child: Center(
-            child: Card(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('正在解析书籍...'),
-                  ],
-                ),
-    );
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // 导入书籍
+      await ref.read(bookshelfProvider.notifier).importLocalBook(filePath);
+
+      if (mounted) {
+        Navigator.pop(context); // 关闭加载指示器
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('书籍导入成功')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // 关闭加载指示器
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('导入失败: $e')),
+        );
+      }
+    }
   }
 }

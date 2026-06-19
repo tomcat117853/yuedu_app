@@ -203,20 +203,5 @@ class SourceService {
   }
 
   /// 获取所有书源
-  Future<List<BookSource>> getAllSources() async {
-    return _sourceRepository.getAllSources();
-  }
-
-  double _calculateCompositeScore(BookSource source) {
-    final confidenceScore = source.confidence;
-    final chapterScore = source.chapterCount > 0 ? (source.chapterCount / 100).clamp(0.0, 1.0) : 0.5;
-    double freshnessScore = 0.5;
-    if (source.lastCheck != null) { final hoursSinceCheck = DateTime.now().difference(source.lastCheck!).inHours; freshnessScore = (1.0 - hoursSinceCheck / 168).clamp(0.0, 1.0); }
-    double responseScore = 0.5;
-    if (source.lastAvailable != null) { final hoursSinceAvailable = DateTime.now().difference(source.lastAvailable!).inHours; responseScore = (1.0 - hoursSinceAvailable / 168).clamp(0.0, 1.0); }
-    final successScore = source.confidence * 0.7 + (source.lastAvailable != null ? 0.3 : 0.0);
-    return (confidenceScore * 0.30 + chapterScore * 0.25 + freshnessScore * 0.20 + responseScore * 0.15 + successScore * 0.10).clamp(0.0, 1.0);
-  }
-
   Future<List<BookSource>> getAllSources() => _sourceRepository.getAllSources();
 }

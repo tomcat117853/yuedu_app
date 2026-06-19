@@ -526,11 +526,15 @@ class SettingsData {
       fontSize: config.fontSize,
       lineHeight: config.lineHeight,
       paragraphSpacing: config.paragraphSpacing,
-      margin: config.margin,
+      margin: config.pagePaddingValue,
       indentChars: config.indentChars,
       fontFamily: config.fontFamily,
-      fontWeight: config.fontWeight,
-      letterSpacing: config.letterSpacing,
+      fontWeight: config.fontWeight.index,
+      letterSpacing: config.letterSpacing == LetterSpacing.tight
+          ? -0.5
+          : config.letterSpacing == LetterSpacing.loose
+              ? 1.0
+              : 0.0,
       readMode: readMode,
     );
   }
@@ -829,7 +833,6 @@ class BackupService {
     backupFiles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return backupFiles;
   }
-}
 
   Future<List<Map<String, dynamic>>> getBackupList() async {
     final directory = await getApplicationDocumentsDirectory();
@@ -870,11 +873,6 @@ class BackupService {
     if (await file.exists()) {
       await file.delete();
     }
-  }
-
-  /// 分享备份文件
-  Future<void> shareBackup(String filePath) async {
-    await Share.shareXFiles([XFile(filePath)], subject: '阅读App数据备份');
   }
 }
 

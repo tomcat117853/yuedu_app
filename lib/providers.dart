@@ -7,6 +7,8 @@ import 'domain/engine/anti_crawl.dart';
 import 'domain/engine/source_engine.dart';
 import 'domain/engine/source_matcher.dart';
 import 'domain/models/source_definition.dart';
+import 'domain/models/reader_theme.dart';
+import 'domain/models/layout_config.dart';
 import 'domain/services/book_service.dart';
 import 'domain/services/backup_service.dart';
 import 'domain/services/chapter_cache_service.dart';
@@ -171,3 +173,22 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     sourceRepository: sourceRepository,
   );
 });
+
+/// 阅读主题 Provider
+final readerThemeProvider = StateProvider<ReaderTheme>((ref) {
+  return ReaderTheme.day();
+});
+
+/// 排版配置 Provider
+final layoutConfigProvider = StateNotifierProvider<LayoutConfigNotifier, LayoutConfig>((ref) {
+  return LayoutConfigNotifier();
+});
+
+/// 排版配置管理
+class LayoutConfigNotifier extends StateNotifier<LayoutConfig> {
+  LayoutConfigNotifier() : super(LayoutConfig.defaultConfig);
+
+  void update(LayoutConfig Function(LayoutConfig) updater) {
+    state = updater(state);
+  }
+}

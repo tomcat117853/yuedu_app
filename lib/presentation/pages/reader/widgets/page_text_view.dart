@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../../domain/models/layout_config.dart';
 import '../../../../domain/models/reader_theme.dart';
 
@@ -16,48 +15,26 @@ class PageTextView extends StatelessWidget {
     required this.theme,
   });
 
-  /// 将 int 转换为 FontWeight
-  static FontWeight? _intToFontWeight(int index) {
-    switch (index) {
-      case 1:
-        return FontWeight.bold;
-      case 2:
-        return FontWeight.w100;
-      case 3:
-        return FontWeight.w200;
-      case 4:
-        return FontWeight.w300;
-      case 5:
-        return FontWeight.w400;
-      case 6:
-        return FontWeight.w500;
-      case 7:
-        return FontWeight.w600;
-      case 8:
-        return FontWeight.w700;
-      case 9:
-        return FontWeight.w800;
-      default:
-        return FontWeight.normal;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
       color: theme.backgroundColor,
       padding: EdgeInsets.symmetric(
-        horizontal: layoutConfig.margin,
-        vertical: layoutConfig.margin * 0.5,
+        horizontal: layoutConfig.pagePaddingValue,
+        vertical: layoutConfig.pagePaddingValue * 0.5,
       ),
       child: Text(
         text,
         style: TextStyle(
-          fontSize: layoutConfig.fontSize.toDouble(),
-          fontWeight: _intToFontWeight(layoutConfig.fontWeight),
+          fontSize: layoutConfig.fontSize,
+          fontWeight: layoutConfig.fontWeight,
           color: theme.textColor,
           height: layoutConfig.lineHeight,
-          letterSpacing: layoutConfig.letterSpacing,
+          letterSpacing: layoutConfig.letterSpacing == LetterSpacing.tight
+              ? -0.5
+              : layoutConfig.letterSpacing == LetterSpacing.loose
+                  ? 1.0
+                  : 0.0,
         ),
       ),
     );

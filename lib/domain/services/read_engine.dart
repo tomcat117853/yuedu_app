@@ -55,13 +55,28 @@ class ReadEngine {
 
   Future<List<PageRange>> _paginateInIsolate(String text, LayoutConfig config) async {
     final receivePort = ReceivePort();
-    await Isolate.spawn(_isolatePaginationEntry, _PaginationMessage(text: text, fontSize: config.fontSize, lineHeight: config.lineHeight, paragraphSpacing: config.paragraphSpacing, margin: config.margin, indentChars: config.indentChars, letterSpacing: config.letterSpacing, sendPort: receivePort.sendPort));
+    await Isolate.spawn(_isolatePaginationEntry, _PaginationMessage(
+      text: text,
+      fontSize: config.fontSize,
+      lineHeight: config.lineHeight,
+      paragraphSpacing: config.paragraphSpacing,
+      margin: config.margin,
+      indentChars: config.indentChars,
+      letterSpacing: config.letterSpacingValue,
+      sendPort: receivePort.sendPort
+    ));
     return await receivePort.first as List<PageRange>;
   }
 
   static void _isolatePaginationEntry(_PaginationMessage message) {
     final layout = TextLayout();
-    final config = LayoutConfig(fontSize: message.fontSize, lineHeight: message.lineHeight, paragraphSpacing: message.paragraphSpacing, margin: message.margin, indentChars: message.indentChars, letterSpacing: message.letterSpacing);
+    // 在Isolate中创建一个简化版本的LayoutConfig
+    final config = LayoutConfig(
+      fontSize: message.fontSize,
+      lineHeight: message.lineHeight,
+      paragraphSpacing: message.paragraphSpacing,
+      indentChars: message.indentChars,
+    );
     final pages = layout.calculatePages(text: message.text, config: config);
     message.sendPort.send(pages);
   }

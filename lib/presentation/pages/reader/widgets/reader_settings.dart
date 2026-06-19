@@ -197,11 +197,11 @@ class ReaderSettings extends StatelessWidget {
             if (onLetterSpacingChanged != null)
               _buildSliderRow(
                 label: '字距',
-                value: layoutConfig.letterSpacing,
-                min: 0.0,
-                max: 3.0,
+                value: layoutConfig.letterSpacingValue,
+                min: -1.0,
+                max: 2.0,
                 divisions: 15,
-                displayValue: layoutConfig.letterSpacing.toStringAsFixed(1),
+                displayValue: layoutConfig.letterSpacingValue.toStringAsFixed(1),
                 onChanged: onLetterSpacingChanged!,
               ),
           ],

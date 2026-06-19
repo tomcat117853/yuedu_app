@@ -16,6 +16,12 @@ class ReaderTheme {
     required this.hintColor,
   });
 
+  /// 兼容性别名
+  Color get bgColor => backgroundColor;
+  
+  /// 预定义主题列表（别名）
+  static const List<ReaderTheme> all = presets;
+
   /// 预定义主题列表
   static const List<ReaderTheme> presets = [
     ReaderTheme(

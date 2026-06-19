@@ -19,7 +19,7 @@ class TextLayout {
       } else {
         width += config.fontSize * 0.6;
       }
-      width += config.letterSpacing;
+      width += config.letterSpacingValue;
     }
     return width;
   }

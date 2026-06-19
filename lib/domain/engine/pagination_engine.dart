@@ -46,9 +46,9 @@ class PaginationEngine {
   double _calculateParagraphHeight(String paragraph, LayoutConfig config) {
     final indentWidth = config.indentWidth;
     final availableWidth = textWidth - indentWidth;
-    if (availableWidth <= 0) return config.lineSpacing;
+    if (availableWidth <= 0) return config.lineSpacingValue;
     final charsPerLine = (availableWidth / config.fontSize).floor();
-    if (charsPerLine <= 0) return config.lineSpacing;
+    if (charsPerLine <= 0) return config.lineSpacingValue;
     final lines = (paragraph.length / charsPerLine).ceil();
     return lines * config.fontSize * config.lineHeight;
   }

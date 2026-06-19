@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers.dart';
-import '../../domain/models/reader_theme.dart';
-import '../../domain/models/layout_config.dart';
+import '../../../providers.dart';
+import '../../../domain/models/reader_theme.dart';
+import '../../../domain/models/layout_config.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -255,7 +255,7 @@ class SettingsPage extends ConsumerWidget {
                   onChanged: (value) {
                     setState(() {
                       ref.read(layoutConfigProvider.notifier).update(
-                            (state) => state.copyWith(fontSize: value.round()),
+                            (state) => state.copyWith(fontSize: value),
                           );
                     });
                   },
