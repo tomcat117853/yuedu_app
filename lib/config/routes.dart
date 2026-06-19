@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/pages/bookshelf/bookshelf_page.dart';
 import '../presentation/pages/reader/reader_page.dart';
+import '../presentation/pages/reader/pdf_reader_page.dart';
 import '../presentation/pages/discover/discover_page.dart';
 import '../presentation/pages/source/source_page.dart';
 import '../presentation/pages/profile/profile_page.dart';
@@ -13,6 +15,8 @@ class AppRoutes {
   static const String discover = '/discover';
   static const String source = '/source';
   static const String profile = '/profile';
+  static const String bookDetail = '/book-detail';
+  static const String pdfReader = '/pdf-reader';
 
   // 路由参数名
   static const String bookIdParam = 'bookId';
@@ -77,6 +81,15 @@ GoRouter createRouter() {
         builder: (context, state) {
           final bookId = state.pathParameters[AppRoutes.bookIdParam]!;
           return ReaderPage(bookId: bookId);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.pdfReader,
+        name: 'pdf-reader',
+        builder: (context, state) {
+          final bookId = state.uri.queryParameters['bookId'] ?? '';
+          final filePath = state.uri.queryParameters['filePath'] ?? '';
+          return PdfReaderPage(bookId: bookId, filePath: filePath);
         },
       ),
     ],
