@@ -239,7 +239,7 @@ class ReaderSettings extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: theme.textColor.withValues(alpha: 0.3)),
+          border: Border.all(color: theme.textColor.withOpacity(0.3)),
         ),
         child: Icon(icon, size: 20, color: theme.textColor),
       ),
@@ -278,7 +278,7 @@ class ReaderSettings extends StatelessWidget {
               divisions: divisions,
               onChanged: onChanged,
               activeColor: theme.textColor,
-              inactiveColor: theme.textColor.withValues(alpha: 0.3),
+              inactiveColor: theme.textColor.withOpacity(0.3),
             ),
           ),
           SizedBox(

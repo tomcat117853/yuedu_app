@@ -162,7 +162,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colorScheme.primary.withValues(alpha: 0.8),
+                    colorScheme.primary.withOpacity(0.8),
                     colorScheme.primary,
                   ],
                 ),
@@ -195,7 +195,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                           Text(
                             detail.author,
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: Colors.white.withOpacity(0.8),
                               fontSize: 14,
                             ),
                           ),
@@ -216,7 +216,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                           Text(
                             '来源: ${detail.sourceName}',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: Colors.white.withOpacity(0.6),
                               fontSize: 12,
                             ),
                           ),
@@ -377,7 +377,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

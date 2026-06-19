@@ -128,11 +128,36 @@ class TxtParser {
   /// 解析大文件（流式处理）
   Future<List<Chapter>> _parseLargeFile(File file, String bookId) async {
     final chapters = <Chapter>[];
+    final encoding = await detectEncoding(file);
 
     // 使用Stream按行读取
-    final lines = file.openRead()
-        .transform(utf8.decoder)
-        .transform(const LineSplitter());
+    Stream<String> lines;
+    if (encoding == 'utf-16le' || encoding == 'utf-16be') {
+      // UTF-16编码需要特殊处理
+      final bytes = await file.readAsBytes();
+      String content;
+      if (encoding == 'utf-16le') {
+        final data = bytes.length >= 2 ? bytes.sublist(2) : bytes;
+        content = String.fromCharCodes(
+          List.generate(data.length ~/ 2, (i) => data[i * 2] | (data[i * 2 + 1] << 8)),
+        );
+      } else {
+        final data = bytes.length >= 2 ? bytes.sublist(2) : bytes;
+        content = String.fromCharCodes(
+          List.generate(data.length ~/ 2, (i) => (data[i * 2] << 8) | data[i * 2 + 1]),
+        );
+      }
+      lines = Stream.fromIterable(content.split('\n'));
+    } else if (encoding == 'gbk') {
+      // GBK编码使用latin1解码
+      final bytes = await file.readAsBytes();
+      lines = Stream.fromIterable(latin1.decode(bytes).split('\n'));
+    } else {
+      // UTF-8编码
+      lines = file.openRead()
+          .transform(utf8.decoder)
+          .transform(const LineSplitter());
+    }
 
     StringBuffer currentContent = StringBuffer();
     String currentTitle = '开始';
