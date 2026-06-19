@@ -6,7 +6,7 @@ import '../../../domain/services/book_service.dart';
 import '../../../domain/services/source_service.dart';
 
 final bookshelfProvider = NotifierProvider<BookshelfProvider, BookshelfState>(
-  () => throw UnimplementedError(),
+  BookshelfProvider.new,
 );
 
 class BookshelfProvider extends Notifier<BookshelfState> {

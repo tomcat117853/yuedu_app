@@ -5,7 +5,6 @@ import 'data/repositories/book_repository.dart';
 import 'data/repositories/source_repository.dart';
 import 'domain/engine/anti_crawl.dart';
 import 'domain/engine/source_engine.dart';
-import 'domain/engine/source_engine_adapter.dart';
 import 'domain/engine/source_matcher.dart';
 import 'domain/models/source_definition.dart';
 import 'domain/services/book_service.dart';

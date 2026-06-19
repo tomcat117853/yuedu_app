@@ -7,7 +7,7 @@ import '../../../domain/models/reader_theme.dart';
 import '../../../domain/services/read_engine.dart';
 
 final readerProvider = NotifierProvider<ReaderProvider, ReaderState>(
-  () => throw UnimplementedError(),
+  ReaderProvider.new,
 );
 
 class ReaderProvider extends Notifier<ReaderState> {
@@ -228,16 +228,4 @@ class ReaderProvider extends Notifier<ReaderState> {
     );
     updateLayoutConfig(newConfig);
   }
-
-  @override
-  void dispose() {
-    _readEngine.dispose();
-    super.dispose();
-  }
 }
-
-/// 阅读器Provider（使用 family 传递 bookId 参数）
-final readerProvider = StateNotifierProvider.autoDispose
-    .family<ReaderNotifier, ReaderState, String>((ref, bookId) {
-  return ReaderNotifier(bookId, ref);
-});

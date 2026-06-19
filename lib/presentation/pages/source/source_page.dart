@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../domain/services/source_importer.dart';
-import '../../../providers.dart';
 import 'source_provider.dart';
 
 /// 书源管理页面
@@ -25,7 +23,7 @@ class _SourcePageState extends ConsumerState<SourcePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => ref.read(sourcePageProvider.notifier).addSource(),
+            onPressed: _showAddSourceDialog,
           ),
         ],
       ),

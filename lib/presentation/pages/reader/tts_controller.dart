@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../config/theme.dart';
 import '../../../../domain/services/tts_service.dart';
 
 /// TTS 听读控制器 - 悬浮控制面板
