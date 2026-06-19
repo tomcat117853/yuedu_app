@@ -9,6 +9,24 @@ import '../../../data/parsers/epub_parser.dart';
 import '../../../data/parsers/txt_parser.dart';
 import '../../../providers.dart';
 
+/// 书架视图模式
+enum BookshelfViewMode { grid, list }
+
+/// 书架排序方式
+enum BookshelfSortOrder {
+  custom,       // 自定义排序
+  titleAsc,     // 标题升序
+  titleDesc,    // 标题降序
+  authorAsc,   // 作者升序
+  authorDesc,  // 作者降序
+  createdAtAsc, // 添加时间升序（先添加的在前）
+  createdAtDesc, // 添加时间降序（最新添加的在前）
+  updatedAtAsc, // 阅读时间升序
+  updatedAtDesc, // 阅读时间降序
+  progressAsc,  // 阅读进度升序（进度少的在前）
+  progressDesc, // 阅读进度降序（进度多的在前）
+}
+
 /// 书架状态
 class BookshelfState {
   final List<Book> books;
@@ -18,6 +36,9 @@ class BookshelfState {
   final String currentGroup;
   final String searchQuery;
   final Map<String, ReadProgress> progressMap;
+  final BookshelfViewMode viewMode;
+  final BookshelfSortOrder sortOrder;
+  final bool showArchived; // 是否显示归档书籍
 
   const BookshelfState({
     this.books = const [],
@@ -27,6 +48,9 @@ class BookshelfState {
     this.currentGroup = 'all',
     this.searchQuery = '',
     this.progressMap = const {},
+    this.viewMode = BookshelfViewMode.grid,
+    this.sortOrder = BookshelfSortOrder.custom,
+    this.showArchived = false,
   });
 
   BookshelfState copyWith({
@@ -37,6 +61,9 @@ class BookshelfState {
     String? currentGroup,
     String? searchQuery,
     Map<String, ReadProgress>? progressMap,
+    BookshelfViewMode? viewMode,
+    BookshelfSortOrder? sortOrder,
+    bool? showArchived,
   }) {
     return BookshelfState(
       books: books ?? this.books,
@@ -46,6 +73,9 @@ class BookshelfState {
       currentGroup: currentGroup ?? this.currentGroup,
       searchQuery: searchQuery ?? this.searchQuery,
       progressMap: progressMap ?? this.progressMap,
+      viewMode: viewMode ?? this.viewMode,
+      sortOrder: sortOrder ?? this.sortOrder,
+      showArchived: showArchived ?? this.showArchived,
     );
   }
 }
@@ -212,9 +242,177 @@ class BookshelfNotifier extends StateNotifier<BookshelfState> {
     }
   }
 
+  /// 切换视图模式
+  void toggleViewMode() {
+    final newMode = state.viewMode == BookshelfViewMode.grid
+        ? BookshelfViewMode.list
+        : BookshelfViewMode.grid;
+    state = state.copyWith(viewMode: newMode);
+  }
+
+  /// 设置视图模式
+  void setViewMode(BookshelfViewMode mode) {
+    state = state.copyWith(viewMode: mode);
+  }
+
+  /// 切换排序方式
+  void toggleSortOrder() {
+    final orders = BookshelfSortOrder.values;
+    final currentIndex = orders.indexOf(state.sortOrder);
+    final nextIndex = (currentIndex + 1) % orders.length;
+    state = state.copyWith(sortOrder: orders[nextIndex]);
+    _sortBooks();
+  }
+
+  /// 设置排序方式
+  void setSortOrder(BookshelfSortOrder order) {
+    state = state.copyWith(sortOrder: order);
+    _sortBooks();
+  }
+
+  /// 对书籍列表进行排序
+  void _sortBooks() {
+    final sortedBooks = List<Book>.from(state.books);
+    switch (state.sortOrder) {
+      case BookshelfSortOrder.custom:
+        // 自定义排序：按 sortOrder 字段
+        sortedBooks.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        break;
+      case BookshelfSortOrder.titleAsc:
+        sortedBooks.sort((a, b) => a.title.compareTo(b.title));
+        break;
+      case BookshelfSortOrder.titleDesc:
+        sortedBooks.sort((a, b) => b.title.compareTo(a.title));
+        break;
+      case BookshelfSortOrder.authorAsc:
+        sortedBooks.sort((a, b) => (a.author ?? '').compareTo(b.author ?? ''));
+        break;
+      case BookshelfSortOrder.authorDesc:
+        sortedBooks.sort((a, b) => (b.author ?? '').compareTo(a.author ?? ''));
+        break;
+      case BookshelfSortOrder.createdAtAsc:
+        sortedBooks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+      case BookshelfSortOrder.createdAtDesc:
+        sortedBooks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        break;
+      case BookshelfSortOrder.updatedAtAsc:
+        sortedBooks.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+        break;
+      case BookshelfSortOrder.updatedAtDesc:
+        sortedBooks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        break;
+      case BookshelfSortOrder.progressAsc:
+        sortedBooks.sort((a, b) {
+          final progressA = state.progressMap[a.id]?.progressPercent ?? 0;
+          final progressB = state.progressMap[b.id]?.progressPercent ?? 0;
+          return progressA.compareTo(progressB);
+        });
+        break;
+      case BookshelfSortOrder.progressDesc:
+        sortedBooks.sort((a, b) {
+          final progressA = state.progressMap[a.id]?.progressPercent ?? 0;
+          final progressB = state.progressMap[b.id]?.progressPercent ?? 0;
+          return progressB.compareTo(progressA);
+        });
+        break;
+    }
+    state = state.copyWith(books: sortedBooks);
+  }
+
+  /// 创建分组
+  Future<bool> createGroup(String name) async {
+    if (name.trim().isEmpty) return false;
+    try {
+      // 检查是否已存在
+      if (state.groups.contains(name)) return false;
+      await _bookRepository.createGroup(name);
+      await _loadGroups();
+      return true;
+    } catch (e) {
+      debugPrint('创建分组失败: $e');
+      return false;
+    }
+  }
+
+  /// 删除分组
+  Future<bool> deleteGroup(String groupId) async {
+    if (groupId == 'default' || groupId == 'all') return false;
+    try {
+      await _bookRepository.deleteGroup(groupId);
+      // 如果当前在删除的分组，则切换到全部
+      if (state.currentGroup == groupId) {
+        state = state.copyWith(currentGroup: 'all');
+      }
+      await _loadGroups();
+      await _loadBooks();
+      return true;
+    } catch (e) {
+      debugPrint('删除分组失败: $e');
+      return false;
+    }
+  }
+
+  /// 重命名分组
+  Future<bool> renameGroup(String oldName, String newName) async {
+    if (newName.trim().isEmpty) return false;
+    try {
+      await _bookRepository.renameGroup(oldName, newName);
+      await _loadGroups();
+      return true;
+    } catch (e) {
+      debugPrint('重命名分组失败: $e');
+      return false;
+    }
+  }
+
+  /// 移动书籍到指定分组
+  Future<void> moveBookToGroup(String bookId, String groupId) async {
+    try {
+      await _bookRepository.updateBookGroup(bookId, groupId);
+      await _loadBooks();
+    } catch (e) {
+      debugPrint('移动书籍到分组失败: $e');
+    }
+  }
+
+  /// 更新书籍排序顺序
+  Future<void> updateBookSortOrder(String bookId, int newOrder) async {
+    try {
+      await _bookRepository.updateBookSortOrder(bookId, newOrder);
+      await _loadBooks();
+    } catch (e) {
+      debugPrint('更新书籍排序失败: $e');
+    }
+  }
+
+  /// 切换归档状态
+  Future<void> toggleArchive(String bookId) async {
+    try {
+      final book = state.books.where((b) => b.id == bookId).firstOrNull;
+      if (book == null) return;
+      final newStatus = book.status == 2 ? 0 : 2; // 2=archived, 0=reading
+      await _bookRepository.updateBookStatus(bookId, newStatus);
+      await _loadBooks();
+    } catch (e) {
+      debugPrint('切换归档状态失败: $e');
+    }
+  }
+
+  /// 加载分组列表
+  Future<void> _loadGroups() async {
+    try {
+      final groups = await _bookRepository.getAllGroups();
+      state = state.copyWith(groups: groups);
+    } catch (e) {
+      debugPrint('加载分组列表失败: $e');
+    }
+  }
+
   /// 刷新
   Future<void> refresh() async {
     await _loadBooks();
+    await _loadGroups();
   }
 }
 

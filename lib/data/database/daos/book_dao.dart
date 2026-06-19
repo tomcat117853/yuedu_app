@@ -99,4 +99,40 @@ class BookDao extends DatabaseAccessor<AppDatabase> with _$BookDaoMixin {
           ]))
         .watch();
   }
+
+  // ==================== 分组管理 ====================
+
+  /// 获取所有分组（从书籍的 groupId 字段派生）
+  Future<List<String>> getAllGroups() async {
+    final result = await customSelect(
+      'SELECT DISTINCT group_id FROM books WHERE group_id IS NOT NULL AND group_id != ""',
+    ).get();
+    final groups = result.map((row) => row.read<String>('group_id')).toList();
+    // 确保默认分组存在
+    if (!groups.contains('default')) {
+      groups.insert(0, 'default');
+    }
+    return groups;
+  }
+
+  /// 创建分组（如果分组不存在则添加）
+  Future<void> createGroup(String name) async {
+    // 分组会在书籍添加时自动创建，这里只需确保分组可用
+    // 如果需要持久化分组列表，可扩展此方法
+  }
+
+  /// 删除分组
+  Future<void> deleteGroup(String groupId) async {
+    if (groupId == 'default' || groupId == 'all') return;
+    // 将该分组的书籍移到默认分组
+    await (update(books)..where((t) => t.groupId.equals(groupId)))
+        .write(const BooksCompanion(groupId: Value('default')));
+  }
+
+  /// 重命名分组
+  Future<void> renameGroup(String oldName, String newName) async {
+    if (oldName == 'default' || oldName == 'all') return;
+    await (update(books)..where((t) => t.groupId.equals(oldName)))
+        .write(BooksCompanion(groupId: Value(newName)));
+  }
 }

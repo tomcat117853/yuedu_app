@@ -187,6 +187,69 @@ class BookRepository {
         );
   }
 
+  // ==================== 分组管理 ====================
+
+  /// 获取所有分组
+  Future<List<String>> getAllGroups() async {
+    final groups = await _db.bookDao.getAllGroups();
+    return groups;
+  }
+
+  /// 创建分组
+  Future<void> createGroup(String name) async {
+    await _db.bookDao.createGroup(name);
+  }
+
+  /// 删除分组
+  Future<void> deleteGroup(String groupId) async {
+    // 将该分组的书籍移到默认分组
+    final books = await _db.bookDao.getBooksByGroup(groupId: groupId);
+    for (final book in books) {
+      await _db.bookDao.updateBook(
+        db.BooksCompanion(
+          id: Value(book.id),
+          groupId: const Value('default'),
+        ),
+      );
+    }
+    await _db.bookDao.deleteGroup(groupId);
+  }
+
+  /// 重命名分组
+  Future<void> renameGroup(String oldName, String newName) async {
+    await _db.bookDao.renameGroup(oldName, newName);
+  }
+
+  /// 更新书籍分组
+  Future<void> updateBookGroup(String bookId, String groupId) async {
+    await _db.bookDao.updateBook(
+      db.BooksCompanion(
+        id: Value(bookId),
+        groupId: Value(groupId),
+      ),
+    );
+  }
+
+  /// 更新书籍排序顺序
+  Future<void> updateBookSortOrder(String bookId, int sortOrder) async {
+    await _db.bookDao.updateBook(
+      db.BooksCompanion(
+        id: Value(bookId),
+        sortOrder: Value(sortOrder),
+      ),
+    );
+  }
+
+  /// 更新书籍状态
+  Future<void> updateBookStatus(String bookId, int status) async {
+    await _db.bookDao.updateBook(
+      db.BooksCompanion(
+        id: Value(bookId),
+        status: Value(status),
+      ),
+    );
+  }
+
   // ==================== 转换方法 ====================
 
   /// 数据库实体转领域模型
