@@ -1,3 +1,4 @@
+class Routes {
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/pages/bookshelf/bookshelf_page.dart';
@@ -12,10 +13,13 @@ import '../presentation/pages/profile/backup_page.dart';
 class AppRoutes {
   // 路由路径
   static const String bookshelf = '/bookshelf';
-  static const String reader = '/reader/:bookId';
   static const String discover = '/discover';
   static const String source = '/source';
   static const String profile = '/profile';
+  static const String reader = '/reader';
+  static const String backup = '/backup';
+  static const String settings = '/settings';
+}
   static const String bookDetail = '/book-detail';
   static const String pdfReader = '/pdf-reader';
   static const String backup = '/backup';

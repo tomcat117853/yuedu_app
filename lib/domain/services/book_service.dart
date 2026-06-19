@@ -87,8 +87,7 @@ class BookService {
     final books = await _bookRepository.getAllBooks();
     final lowerQuery = query.toLowerCase();
     return books.where((book) {
-      return book.title.toLowerCase().contains(lowerQuery) ||
-          book.author.toLowerCase().contains(lowerQuery);
+      return book.title.toLowerCase().contains(lowerQuery) || book.author.toLowerCase().contains(lowerQuery);
     }).toList();
   }
 
@@ -114,9 +113,7 @@ class BookService {
   Future<void> updateBookStatus(String bookId, int status) async {
     final book = await _bookRepository.getBookById(bookId);
     if (book != null) {
-      await _bookRepository.updateBook(
-        book.copyWith(status: status, updatedAt: DateTime.now()),
-      );
+      await _bookRepository.updateBook(book.copyWith(status: status, updatedAt: DateTime.now()));
     }
   }
 }

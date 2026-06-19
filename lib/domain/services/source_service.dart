@@ -6,7 +6,6 @@ import '../engine/source_engine.dart';
 import '../engine/source_matcher.dart';
 import '../../data/repositories/source_repository.dart';
 
-/// 书源服务 - 处理书源相关的业务逻辑
 class SourceService {
   final SourceRepository _sourceRepository;
   final SourceEngine? _engine;
@@ -19,13 +18,8 @@ class SourceService {
   })  : _engine = engine,
         _matcher = matcher;
 
-  /// 获取所有启用的书源
-  Future<List<BookSource>> getEnabledSources(String bookId) async {
-    final sources = await _sourceRepository.getSourcesByBookId(bookId);
-    return sources.where((s) => s.enabled).toList();
-  }
+  Future<List<BookSource>> getEnabledSources(String bookId) async { final sources = await _sourceRepository.getSourcesByBookId(bookId); return sources.where((s) => s.enabled).toList(); }
 
-  /// 获取主要书源
   Future<BookSource?> getPrimarySource(String bookId) async {
     final sources = await _sourceRepository.getSourcesByBookId(bookId);
     for (final source in sources) {
@@ -37,57 +31,23 @@ class SourceService {
     return enabled.first;
   }
 
-  /// 添加书源
-  Future<BookSource> addSource({
-    required String bookId,
-    required String sourceId,
-    required String sourceName,
-    required String bookKey,
-    bool isPrimary = false,
-  }) async {
-    final source = BookSource(
-      id: _sourceRepository.generateId(),
-      bookId: bookId,
-      sourceId: sourceId,
-      sourceName: sourceName,
-      bookKey: bookKey,
-      isPrimary: isPrimary,
-    );
+  Future<BookSource> addSource({required String bookId, required String sourceId, required String sourceName, required String bookKey, bool isPrimary = false}) async {
+    final source = BookSource(id: _sourceRepository.generateId(), bookId: bookId, sourceId: sourceId, sourceName: sourceName, bookKey: bookKey, isPrimary: isPrimary);
     await _sourceRepository.insertSource(source);
     return source;
   }
 
-  /// 删除书源
-  Future<void> deleteSource(String sourceId) async {
-    await _sourceRepository.deleteSource(sourceId);
-  }
+  Future<void> deleteSource(String sourceId) => _sourceRepository.deleteSource(sourceId);
+  Future<void> updateSource(BookSource source) => _sourceRepository.updateSource(source);
 
-  /// 更新书源信息
-  Future<void> updateSource(BookSource source) async {
-    await _sourceRepository.updateSource(source);
-  }
-
-  /// 设置主要书源
   Future<void> setPrimarySource(String bookId, String sourceId) async {
     final sources = await _sourceRepository.getSourcesByBookId(bookId);
-    for (final source in sources) {
-      await _sourceRepository.updateSource(
-        source.copyWith(isPrimary: source.id == sourceId),
-      );
-    }
+    for (final source in sources) { await _sourceRepository.updateSource(source.copyWith(isPrimary: source.id == sourceId)); }
   }
 
-  /// 更新书源置信度
   Future<void> updateConfidence(String sourceId, double confidence) async {
     final source = await _sourceRepository.getSourceById(sourceId);
-    if (source != null) {
-      await _sourceRepository.updateSource(
-        source.copyWith(
-          confidence: confidence,
-          lastCheck: DateTime.now(),
-        ),
-      );
-    }
+    if (source != null) { await _sourceRepository.updateSource(source.copyWith(confidence: confidence, lastCheck: DateTime.now())); }
   }
 
   /// 搜索书籍（通过所有可用的 SourceDefinition）
@@ -135,10 +95,7 @@ class SourceService {
     return deduplicated;
   }
 
-  /// 获取书源列表
-  Future<List<BookSource>> getSourcesByBookId(String bookId) async {
-    return _sourceRepository.getSourcesByBookId(bookId);
-  }
+  Future<List<BookSource>> getSourcesByBookId(String bookId) => _sourceRepository.getSourcesByBookId(bookId);
 
   /// 检查书源可用性（通过 SourceEngine 健康检查）
   Future<bool> checkSourceAvailability(
@@ -249,4 +206,17 @@ class SourceService {
   Future<List<BookSource>> getAllSources() async {
     return _sourceRepository.getAllSources();
   }
+
+  double _calculateCompositeScore(BookSource source) {
+    final confidenceScore = source.confidence;
+    final chapterScore = source.chapterCount > 0 ? (source.chapterCount / 100).clamp(0.0, 1.0) : 0.5;
+    double freshnessScore = 0.5;
+    if (source.lastCheck != null) { final hoursSinceCheck = DateTime.now().difference(source.lastCheck!).inHours; freshnessScore = (1.0 - hoursSinceCheck / 168).clamp(0.0, 1.0); }
+    double responseScore = 0.5;
+    if (source.lastAvailable != null) { final hoursSinceAvailable = DateTime.now().difference(source.lastAvailable!).inHours; responseScore = (1.0 - hoursSinceAvailable / 168).clamp(0.0, 1.0); }
+    final successScore = source.confidence * 0.7 + (source.lastAvailable != null ? 0.3 : 0.0);
+    return (confidenceScore * 0.30 + chapterScore * 0.25 + freshnessScore * 0.20 + responseScore * 0.15 + successScore * 0.10).clamp(0.0, 1.0);
+  }
+
+  Future<List<BookSource>> getAllSources() => _sourceRepository.getAllSources();
 }

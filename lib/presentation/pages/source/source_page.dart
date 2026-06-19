@@ -26,27 +26,7 @@ class _SourcePageState extends ConsumerState<SourcePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _showAddSourceDialog,
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'import':
-                  _importSources();
-                  break;
-                case 'export':
-                  _exportSources();
-                  break;
-                case 'check':
-                  _checkAllSources();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'import', child: Text('导入书源')),
-              const PopupMenuItem(value: 'export', child: Text('导出书源')),
-              const PopupMenuItem(value: 'check', child: Text('检查可用性')),
-            ],
+            onPressed: () => ref.read(sourcePageProvider.notifier).addSource(),
           ),
         ],
       ),

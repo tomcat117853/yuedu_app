@@ -9,7 +9,6 @@ import 'domain/engine/source_engine_adapter.dart';
 import 'domain/engine/source_matcher.dart';
 import 'domain/models/source_definition.dart';
 import 'domain/services/book_service.dart';
-import 'domain/services/backup_service.dart';
 import 'domain/services/chapter_cache_service.dart';
 import 'domain/services/source_importer.dart';
 import 'domain/services/source_service.dart';
@@ -134,11 +133,3 @@ class SourceDefinitionsNotifier extends StateNotifier<List<SourceDefinition>> {
     state = sources;
   }
 }
-
-/// 备份服务 Provider
-final backupServiceProvider = Provider<BackupService>((ref) {
-  final db = ref.watch(databaseProvider);
-  final bookRepository = ref.watch(bookRepositoryProvider);
-  final sourceRepository = ref.watch(sourceRepositoryProvider);
-  return BackupService(db, bookRepository, sourceRepository);
-});

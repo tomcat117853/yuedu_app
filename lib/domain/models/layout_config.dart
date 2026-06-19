@@ -116,3 +116,19 @@ class LayoutConfig {
   String toString() =>
       'LayoutConfig(fontSize: $fontSize, lineHeight: $lineHeight, margin: $margin)';
 }
+
+/// FontWeight placeholder
+class FontWeight {
+  final int index;
+  const FontWeight._(this.index);
+  static const FontWeight normal = FontWeight._(0);
+  static const FontWeight bold = FontWeight._(1);
+  static const FontWeight w100 = FontWeight._(2);
+  static const FontWeight w200 = FontWeight._(3);
+  static const FontWeight w300 = FontWeight._(4);
+  static const FontWeight w400 = FontWeight._(5);
+  static const FontWeight w500 = FontWeight._(6);
+  static const FontWeight w600 = FontWeight._(7);
+  static const FontWeight w700 = FontWeight._(8);
+  static const FontWeight w800 = FontWeight._(9);
+}

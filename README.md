@@ -1,17 +1,18 @@
 # yuedu_app
 
-A new Flutter project.
+全平台本地阅读应用，支持 TXT、EPUB、PDF 等格式。
 
-## Getting Started
+## 功能特性
 
-This project is a starting point for a Flutter application.
+- 本地书籍管理
+- 多格式支持（TXT、EPUB、PDF）
+- 书源管理
+- 阅读进度同步
+- 个性化阅读设置
 
-A few resources to get you started if this is your first Flutter project:
+## 开发
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run
+```

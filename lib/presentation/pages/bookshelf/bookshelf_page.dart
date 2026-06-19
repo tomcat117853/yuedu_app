@@ -1,33 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:file_picker/file_picker.dart';
-import '../../../config/routes.dart';
-import '../../../config/theme.dart';
-import '../../../domain/models/book.dart';
-import 'bookshelf_provider.dart';
-import '../../widgets/book_card.dart';
 
-/// 书架页面
-class BookshelfPage extends ConsumerWidget {
+import '../../providers.dart';
+import '../reader/reader_page.dart';
+import 'bookshelf_provider.dart';
+import 'widgets/book_card.dart';
+import 'widgets/group_list.dart';
+
+class BookshelfPage extends ConsumerStatefulWidget {
   const BookshelfPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BookshelfPage> createState() => _BookshelfPageState();
+}
+
+class _BookshelfPageState extends ConsumerState<BookshelfPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(bookshelfProvider.notifier).loadBooks();
+    });
+  }
+
+  void _onBookTap(String bookId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReaderPage(bookId: bookId),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(bookshelfProvider);
-    final groups = ref.watch(bookshelfGroupsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('书架'),
+        title: const Text('我的书架'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearch(context, ref),
-          ),
-          IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => _showAddBookDialog(context, ref),
+            onPressed: () => ref.read(bookshelfProvider.notifier).importBook(),
           ),
         ],
       ),
@@ -272,135 +287,6 @@ class BookshelfPage extends ConsumerWidget {
                     Text('正在解析书籍...'),
                   ],
                 ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      // 调用导入方法
-      final book =
-          await ref.read(bookshelfProvider.notifier).importLocalBook(filePath);
-
-      // 关闭加载对话框
-      if (!context.mounted) return;
-      Navigator.pop(context);
-
-      // 显示结果提示
-      if (!context.mounted) return;
-      if (book != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('《${book.title}》导入成功'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } else {
-        final error = ref.read(bookshelfProvider).error ?? '未知错误';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('导入失败: $error'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      // 确保关闭可能存在的加载对话框
-      if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('导入失败: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  /// 显示书籍操作菜单
-  void _showBookOptions(BuildContext context, WidgetRef ref, Book book) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: const Text('书籍详情'),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit),
-                title: const Text('编辑信息'),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: const Icon(Icons.swap_vert),
-                title: const Text('更换书源'),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('删除书籍', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ref.read(bookshelfProvider.notifier).deleteBook(book.id);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
     );
-  }
-}
-
-/// 书籍搜索代理
-class _BookSearchDelegate extends SearchDelegate<String> {
-  final WidgetRef ref;
-
-  _BookSearchDelegate(this.ref);
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-          ref.read(bookshelfProvider.notifier).search('');
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () => close(context, ''),
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    ref.read(bookshelfProvider.notifier).search(query);
-    close(context, query);
-    return const SizedBox.shrink();
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return const SizedBox.shrink();
   }
 }

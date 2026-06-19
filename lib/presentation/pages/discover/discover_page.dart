@@ -52,24 +52,13 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(discoverProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('发现'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '推荐'),
-            Tab(text: '排行'),
-            Tab(text: '分类'),
-            Tab(text: '搜索'),
-          ],
-          labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primaryColor,
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
           _buildRecommendTab(),
           _buildRankTab(),

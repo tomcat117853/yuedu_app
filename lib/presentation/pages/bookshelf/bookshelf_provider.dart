@@ -1,47 +1,91 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 
-import '../../../../data/parsers/epub_parser.dart';
-import '../../../../data/parsers/txt_parser.dart';
-import '../../../../data/repositories/book_repository.dart';
-import '../../../../domain/models/book.dart';
-import '../../../../domain/models/chapter.dart';
-import '../../../../domain/models/read_progress.dart';
-import '../../../../providers.dart';
+import '../../../domain/models/book.dart';
+import '../../../domain/services/book_service.dart';
+import '../../../domain/services/source_service.dart';
 
-/// 书架页面的状态管理
+final bookshelfProvider = NotifierProvider<BookshelfProvider, BookshelfState>(
+  () => throw UnimplementedError(),
+);
+
+class BookshelfProvider extends Notifier<BookshelfState> {
+  late final BookService _bookService;
+
+  @override
+  BookshelfState build() {
+    _bookService = ref.read(bookServiceProvider);
+    return BookshelfState(
+      books: [],
+      groups: [],
+      isLoading: false,
+    );
+  }
+
+  Future<void> loadBooks() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final books = await _bookService.getAllBooks();
+      state = state.copyWith(
+        books: books,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> importBook() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['txt', 'epub', 'pdf'],
+    );
+
+    if (result == null || result.files.isEmpty) {
+      return;
+    }
+
+    final filePath = result.files.first.path;
+    if (filePath == null) {
+      return;
+    }
+
+    state = state.copyWith(isLoading: true);
+    try {
+      await _bookService.importBook(filePath);
+      await loadBooks();
+    } catch (e) {
+      // Handle error
+    }
+    state = state.copyWith(isLoading: false);
+  }
+
+  Future<void> deleteBook(String bookId) async {
+    await _bookService.deleteBook(bookId);
+    await loadBooks();
+  }
+}
+
 class BookshelfState {
   final List<Book> books;
-  final Map<String, ReadProgress> progressMap;
+  final List<String> groups;
   final bool isLoading;
-  final String? error;
-  final String currentGroup;
-  final String searchQuery;
 
-  const BookshelfState({
-    this.books = const [],
-    this.progressMap = const {},
-    this.isLoading = false,
-    this.error,
-    this.currentGroup = 'all',
-    this.searchQuery = '',
+  BookshelfState({
+    required this.books,
+    required this.groups,
+    required this.isLoading,
   });
 
   BookshelfState copyWith({
     List<Book>? books,
-    Map<String, ReadProgress>? progressMap,
+    List<String>? groups,
     bool? isLoading,
-    String? error,
-    String? currentGroup,
-    String? searchQuery,
   }) {
     return BookshelfState(
       books: books ?? this.books,
-      progressMap: progressMap ?? this.progressMap,
+      groups: groups ?? this.groups,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
-      currentGroup: currentGroup ?? this.currentGroup,
-      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 }

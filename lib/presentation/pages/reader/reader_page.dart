@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../providers.dart';
+import '../bookshelf/bookshelf_page.dart';
 import 'reader_provider.dart';
 import 'widgets/page_text_view.dart';
-import 'widgets/scroll_text_view.dart';
-import 'widgets/reader_menu.dart';
 import 'widgets/reader_settings.dart';
 import 'widgets/chapter_list_sheet.dart';
 import 'source_switch_sheet.dart';
@@ -13,7 +12,6 @@ import '../../../../domain/models/book_source.dart';
 import '../../../../domain/models/chapter.dart';
 import '../../../../providers.dart';
 
-/// 阅读器页面 - 全屏沉浸式阅读
 class ReaderPage extends ConsumerStatefulWidget {
   final String bookId;
 
@@ -24,41 +22,28 @@ class ReaderPage extends ConsumerStatefulWidget {
 }
 
 class _ReaderPageState extends ConsumerState<ReaderPage> {
-  final FocusNode _focusNode = FocusNode();
+  bool _showSettings = false;
+  bool _showToc = false;
 
   @override
   void initState() {
     super.initState();
-    _enterImmersiveMode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(readerProvider.notifier).loadBook(widget.bookId);
+    });
   }
 
-  @override
-  void dispose() {
-    _exitImmersiveMode();
-    _focusNode.dispose();
-    super.dispose();
+  void _toggleSettings() {
+    setState(() => _showSettings = !_showSettings);
   }
 
-  /// 进入沉浸式模式
-  void _enterImmersiveMode() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+  void _toggleToc() {
+    setState(() => _showToc = !_showToc);
   }
 
-  /// 退出沉浸式模式
-  void _exitImmersiveMode() {
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-    );
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+  void _onThemeChanged(dynamic theme) {
+    ref.read(readerProvider.notifier).setTheme(theme);
+    setState(() => _showSettings = false);
   }
 
   /// 处理点击事件
@@ -66,29 +51,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final tapX = details.localPosition.dx;
 
-    // 中间区域点击 - 呼出/隐藏菜单
-    final isCenterArea = tapX > screenWidth * 0.3 && tapX < screenWidth * 0.7;
-    if (isCenterArea) {
-      ref.read(readerProvider(widget.bookId).notifier).toggleMenu();
-      return;
-    }
-
-    // 左侧1/3 - 上一页
-    if (tapX < screenWidth * 0.3) {
-      ref.read(readerProvider(widget.bookId).notifier).previousPage();
-      return;
-    }
-
-    // 右侧1/3 - 下一页
-    if (tapX > screenWidth * 0.7) {
-      ref.read(readerProvider(widget.bookId).notifier).nextPage();
-      return;
-    }
+  void _onChapterSelected(int index) {
+    ref.read(readerProvider.notifier).jumpToChapter(index);
+    setState(() => _showToc = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(readerProvider(widget.bookId));
+    final state = ref.watch(readerProvider);
 
     return Scaffold(
       backgroundColor: state.readerTheme.backgroundColor,
@@ -241,10 +211,57 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                         .setTheme(newTheme);
                   },
                 ),
-              ),
-          ],
-        ),
-      ),
+                if (_showSettings)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: MediaQuery.of(context).size.width * 0.7,
+                    child: ReaderSettings(
+                      config: state.layoutConfig,
+                      theme: state.theme,
+                      onConfigChanged: _onConfigChanged,
+                      onThemeChanged: _onThemeChanged,
+                    ),
+                  ),
+                if (_showToc)
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: MediaQuery.of(context).size.width * 0.7,
+                    child: ReaderToc(
+                      chapters: state.chapters,
+                      currentIndex: state.currentChapterIndex,
+                      onChapterSelected: _onChapterSelected,
+                    ),
+                  ),
+                Positioned(
+                  bottom: 20,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.list),
+                        color: state.theme.textColor,
+                        onPressed: _toggleToc,
+                      ),
+                      Text(
+                        '${state.currentPage + 1} / ${state.totalPages}',
+                        style: TextStyle(color: state.theme.textColor),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.settings),
+                        color: state.theme.textColor,
+                        onPressed: _toggleSettings,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
     );
   }
 

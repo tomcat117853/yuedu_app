@@ -1,30 +1,22 @@
 import 'package:flutter/material.dart';
+
 import '../../../../domain/models/layout_config.dart';
 import '../../../../domain/models/reader_theme.dart';
 
-/// 翻页模式文本视图
 class PageTextView extends StatelessWidget {
   final String text;
-  final ReaderTheme theme;
   final LayoutConfig layoutConfig;
-  final int currentPage;
-  final int totalPages;
-  final String chapterTitle;
+  final ReaderTheme theme;
 
   const PageTextView({
     super.key,
     required this.text,
-    required this.theme,
     required this.layoutConfig,
-    required this.currentPage,
-    required this.totalPages,
-    required this.chapterTitle,
+    required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
-    final paragraphs = text.split(RegExp(r'\n+'));
-
     return Container(
       color: theme.backgroundColor,
       padding: EdgeInsets.symmetric(
@@ -84,34 +76,34 @@ class PageTextView extends StatelessWidget {
               ),
             ),
           ),
-
-          // 页码指示
-          Padding(
-            padding: EdgeInsets.only(
-              top: layoutConfig.margin * 0.5,
-              bottom: layoutConfig.margin * 0.3,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '$currentPage / $totalPages',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.hintColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  /// 构建首行缩进
-  String _buildIndent() {
-    return '\u3000' * layoutConfig.indentChars; // 全角空格
+  static FontWeight _intToFontWeight(int index) {
+    switch (index) {
+      case 1:
+        return FontWeight.bold;
+      case 2:
+        return FontWeight.w100;
+      case 3:
+        return FontWeight.w200;
+      case 4:
+        return FontWeight.w300;
+      case 5:
+        return FontWeight.w400;
+      case 6:
+        return FontWeight.w500;
+      case 7:
+        return FontWeight.w600;
+      case 8:
+        return FontWeight.w700;
+      case 9:
+        return FontWeight.w800;
+      default:
+        return FontWeight.normal;
+    }
   }
 
   /// 将 int 转换为 FontWeight

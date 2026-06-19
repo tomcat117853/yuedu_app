@@ -20,7 +20,6 @@ class ChapterContent {
 
   /// 获取纯文本内容（去除HTML标签）
   String get plainText {
-    // 简单的HTML标签移除
     return content.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 

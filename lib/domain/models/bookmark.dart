@@ -1,4 +1,3 @@
-
 /// 书签模型
 class Bookmark {
   final String id;
