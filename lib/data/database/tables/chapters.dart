@@ -18,7 +18,7 @@ class Chapters extends Table {
   TextColumn get title => text()();
 
   /// 排序索引
-  IntegerColumn get orderIndex => integer()();
+  IntColumn get orderIndex => integer()();
 
   /// 内容存储路径
   TextColumn get contentPath => text().nullable()();
@@ -30,7 +30,7 @@ class Chapters extends Table {
   BoolColumn get isVip => boolean().withDefault(const Constant(false))();
 
   /// 字数
-  IntegerColumn get wordCount => integer().withDefault(const Constant(0))();
+  IntColumn get wordCount => integer().withDefault(const Constant(0))();
 
   /// 获取时间
   DateTimeColumn get fetchedAt => dateTime().nullable()();

@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 
 /// 文件服务 - 处理文件操作
 class FileService {
-  static final _uuid = const Uuid();
+  static const _uuid = Uuid();
 
   /// 获取应用文档目录
   Future<String> getDocumentsDirectory() async {

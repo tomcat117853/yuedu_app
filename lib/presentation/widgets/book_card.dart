@@ -45,11 +45,11 @@ class BookCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   // 封面图片或默认
-                  if (book.coverPath != null && File(book.coverPath).existsSync())
+                  if (book.coverPath != null && File(book.coverPath!).existsSync())
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.file(
-                        File(book.coverPath),
+                        File(book.coverPath!),
                         fit: BoxFit.cover,
                       ),
                     )
@@ -102,7 +102,7 @@ class BookCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: progress!.progressPercent / 100,
                           backgroundColor: Colors.black26,
-                          valueColor: AlwaysStoppedAnimation<Color>(
+                          valueColor: const AlwaysStoppedAnimation<Color>(
                             AppTheme.primaryColor,
                           ),
                           minHeight: 3,
@@ -157,7 +157,7 @@ class BookCard extends StatelessWidget {
           // 作者
           Text(
             book.author,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               color: AppTheme.textSecondary,
             ),

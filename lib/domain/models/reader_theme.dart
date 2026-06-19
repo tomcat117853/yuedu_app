@@ -68,9 +68,9 @@ class ReaderTheme {
     return {
       'theme_index': themeIndex,
       'name': name,
-      'background_color': backgroundColor.value,
-      'text_color': textColor.value,
-      'hint_color': hintColor.value,
+      'background_color': backgroundColor.toARGB32(),
+      'text_color': textColor.toARGB32(),
+      'hint_color': hintColor.toARGB32(),
     };
   }
 

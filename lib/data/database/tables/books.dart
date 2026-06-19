@@ -30,13 +30,13 @@ class Books extends Table {
   TextColumn get format => text().withDefault(const Constant('txt'))();
 
   /// 总章节数
-  IntegerColumn get totalChapters => integer().withDefault(const Constant(0))();
+  IntColumn get totalChapters => integer().withDefault(const Constant(0))();
 
   /// 总字数
-  IntegerColumn get wordCount => integer().withDefault(const Constant(0))();
+  IntColumn get wordCount => integer().withDefault(const Constant(0))();
 
   /// 状态: 0=reading, 1=finished, 2=archived
-  IntegerColumn get status => integer().withDefault(const Constant(0))();
+  IntColumn get status => integer().withDefault(const Constant(0))();
 
   /// 创建时间
   DateTimeColumn get createdAt =>
@@ -50,7 +50,7 @@ class Books extends Table {
   TextColumn get groupId => text().withDefault(const Constant('default'))();
 
   /// 排序
-  IntegerColumn get sortOrder => integer().withDefault(const Constant(0))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};

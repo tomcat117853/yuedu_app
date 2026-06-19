@@ -9,10 +9,10 @@ class Bookmarks extends Table {
   TextColumn get bookId => text()();
 
   /// 章节索引
-  IntegerColumn get chapterIndex => integer()();
+  IntColumn get chapterIndex => integer()();
 
   /// 字符偏移量
-  IntegerColumn get charOffset => integer()();
+  IntColumn get charOffset => integer()();
 
   /// 书签标签
   TextColumn get label => text().withDefault(const Constant(''))();
@@ -40,13 +40,13 @@ class Notes extends Table {
   TextColumn get bookId => text()();
 
   /// 章节索引
-  IntegerColumn get chapterIndex => integer()();
+  IntColumn get chapterIndex => integer()();
 
   /// 起始偏移量
-  IntegerColumn get startOffset => integer()();
+  IntColumn get startOffset => integer()();
 
   /// 结束偏移量
-  IntegerColumn get endOffset => integer()();
+  IntColumn get endOffset => integer()();
 
   /// 选中的内容
   TextColumn get content => text().nullable()();

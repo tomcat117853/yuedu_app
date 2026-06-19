@@ -192,7 +192,7 @@ class BookshelfNotifier extends StateNotifier<BookshelfState> {
       await repo.insertBook(book);
 
       // 批量插入章节到数据库
-      await repo.insertChapters(chapters.cast());
+      await repo.insertChapters(chapters);
 
       // 重新加载书籍列表
       await _loadBooks();

@@ -76,9 +76,9 @@ class ReadProgress {
     final hours = readingTime ~/ 3600;
     final minutes = (readingTime % 3600) ~/ 60;
     if (hours > 0) {
-      return '${hours}小时${minutes}分钟';
+      return '$hours小时$minutes分钟';
     }
-    return '${minutes}分钟';
+    return '$minutes分钟';
   }
 
   /// 格式化进度百分比

@@ -12,14 +12,14 @@ class ProgressDao extends DatabaseAccessor<AppDatabase>
   ProgressDao(super.db);
 
   /// 获取阅读进度
-  Future<ReadProgress?> getProgress(String bookId) {
+  Future<ReadProgressTableData?> getProgress(String bookId) {
     return (select(readProgressTable)
           ..where((t) => t.bookId.equals(bookId)))
         .getSingleOrNull();
   }
 
   /// 获取所有阅读进度
-  Future<List<ReadProgress>> getAllProgress() {
+  Future<List<ReadProgressTableData>> getAllProgress() {
     return (select(readProgressTable)
           ..orderBy([
             (t) => OrderingTerm(
@@ -41,7 +41,7 @@ class ProgressDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 获取最近阅读的进度
-  Future<List<ReadProgress>> getRecentProgress({int limit = 10}) {
+  Future<List<ReadProgressTableData>> getRecentProgress({int limit = 10}) {
     return (select(readProgressTable)
           ..orderBy([
             (t) => OrderingTerm(
@@ -52,7 +52,7 @@ class ProgressDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 监听进度变化
-  Stream<ReadProgress?> watchProgress(String bookId) {
+  Stream<ReadProgressTableData?> watchProgress(String bookId) {
     return (select(readProgressTable)
           ..where((t) => t.bookId.equals(bookId)))
         .watchSingleOrNull();

@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../config/theme.dart';
+import '../../../domain/models/source_definition.dart';
+import '../../../providers.dart';
+import 'discover_provider.dart';
+import 'book_detail_page.dart';
 
 /// 发现页面 - 在线书籍搜索和推荐
-class DiscoverPage extends StatefulWidget {
+class DiscoverPage extends ConsumerStatefulWidget {
   const DiscoverPage({super.key});
 
   @override
-  State<DiscoverPage> createState() => _DiscoverPageState();
+  ConsumerState<DiscoverPage> createState() => _DiscoverPageState();
 }
 
-class _DiscoverPageState extends State<DiscoverPage>
+class _DiscoverPageState extends ConsumerState<DiscoverPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
@@ -18,13 +24,30 @@ class _DiscoverPageState extends State<DiscoverPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onTabChanged);
+    // 初始加载推荐
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(discoverProvider.notifier).loadRecommendations();
+    });
+  }
+
+  void _onTabChanged() {
+    if (_tabController.index == 0) {
+      ref.read(discoverProvider.notifier).loadRecommendations();
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _executeSearch(String query) {
+    if (query.trim().isEmpty) return;
+    ref.read(discoverProvider.notifier).search(query.trim());
   }
 
   @override
@@ -59,31 +82,69 @@ class _DiscoverPageState extends State<DiscoverPage>
 
   /// 推荐标签页
   Widget _buildRecommendTab() {
+    final state = ref.watch(discoverProvider);
+    final recommendations = state.recommendations;
+
+    if (state.isLoading && recommendations.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (recommendations.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.explore_outlined,
+                size: 80, color: AppTheme.textHint),
+            const SizedBox(height: 16),
+            const Text('暂无推荐，请先添加书源',
+                style: TextStyle(color: AppTheme.textSecondary)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(discoverProvider.notifier).loadRecommendations();
+              },
+              child: const Text('刷新'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // 热门推荐
-        _buildSectionTitle('热门推荐'),
+        _buildSectionHeader('热门推荐'),
         const SizedBox(height: 12),
-        _buildRecommendCards(),
+        _buildRecommendCards(recommendations.take(10).toList()),
         const SizedBox(height: 24),
-
-        // 最近更新
-        _buildSectionTitle('最近更新'),
+        _buildSectionHeader('最近更新'),
         const SizedBox(height: 12),
-        _buildUpdateList(),
+        _buildUpdateList(recommendations.skip(5).take(10).toList()),
       ],
     );
   }
 
   /// 排行标签页
   Widget _buildRankTab() {
+    final state = ref.watch(discoverProvider);
+    final recommendations = state.recommendations;
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildSectionTitle('点击榜'),
+        _buildSectionHeader('热度榜'),
         const SizedBox(height: 12),
-        _buildRankList(),
+        if (recommendations.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text('暂无数据，请先添加书源',
+                  style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+          )
+        else
+          _buildRankList(recommendations),
       ],
     );
   }
@@ -105,10 +166,18 @@ class _DiscoverPageState extends State<DiscoverPage>
       itemCount: categories.length,
       itemBuilder: (context, index) {
         return Card(
-          child: Center(
-            child: Text(
-              categories[index],
-              style: const TextStyle(fontSize: 16),
+          child: InkWell(
+            onTap: () {
+              _searchController.text = categories[index];
+              _tabController.animateTo(3);
+              _executeSearch(categories[index]);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Center(
+              child: Text(
+                categories[index],
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
           ),
         );
@@ -118,6 +187,8 @@ class _DiscoverPageState extends State<DiscoverPage>
 
   /// 搜索标签页
   Widget _buildSearchTab() {
+    final state = ref.watch(discoverProvider);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -127,108 +198,190 @@ class _DiscoverPageState extends State<DiscoverPage>
             decoration: InputDecoration(
               hintText: '搜索书名或作者',
               prefixIcon: const Icon(Icons.search),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () => _searchController.clear(),
-              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        ref.read(discoverProvider.notifier).clearSearch();
+                        setState(() {});
+                      },
+                    )
+                  : null,
             ),
-            onSubmitted: (query) {
-              // 执行搜索
-            },
+            onChanged: (_) => setState(() {}),
+            onSubmitted: _executeSearch,
           ),
-          const SizedBox(height: 24),
-          _buildSectionTitle('热门搜索'),
-          const SizedBox(height: 12),
-          _buildHotSearchTags(),
+          if (state.isSearching)
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (state.searchResults.isNotEmpty)
+            Expanded(child: _buildSearchResults(state))
+          else if (state.error != null)
+            Expanded(
+              child: Center(
+                child: Text(state.error!,
+                    style: const TextStyle(color: Colors.red)),
+              ),
+            )
+          else ...[
+            const SizedBox(height: 24),
+            _buildSectionHeader('热门搜索'),
+            const SizedBox(height: 12),
+            _buildHotSearchTags(),
+          ],
         ],
       ),
     );
   }
 
+  /// 搜索结果列表
+  Widget _buildSearchResults(DiscoverState state) {
+    return ListView.builder(
+      itemCount: state.searchResults.length,
+      itemBuilder: (context, index) {
+        final result = state.searchResults[index];
+        return _buildBookListItem(result);
+      },
+    );
+  }
+
+  Widget _buildBookListItem(AggregatedResult result) {
+    return ListTile(
+      leading: _buildSmallCover(result.coverUrl),
+      title: Text(result.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        '${result.author} | ${result.sources.length}个书源',
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () {
+        final sourceId = result.bestSourceId;
+        final definitions = ref.read(sourceDefinitionsProvider);
+        final sourceDef = definitions.firstWhere(
+          (d) => d.id == sourceId,
+          orElse: () => definitions.first,
+        );
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BookDetailPage(
+              result: result.sources.first,
+              sourceDef: sourceDef,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   /// 构建分区标题
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
     );
   }
 
   /// 构建推荐卡片
-  Widget _buildRecommendCards() {
+  Widget _buildRecommendCards(List<dynamic> items) {
     return SizedBox(
       height: 180,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Container(
-            width: 120,
-            margin: const EdgeInsets.only(right: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.dividerColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.book, size: 40, color: AppTheme.textHint),
-                    ),
+      child: items.isEmpty
+          ? const Center(child: Text('暂无推荐'))
+          : ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final title = item is Map ? item['title'] as String? ?? '' : (item.title as String? ?? '');
+                final coverUrl = item is Map
+                    ? item['coverUrl'] as String?
+                    : (item.coverUrl as String?);
+                return Container(
+                  width: 120,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: coverUrl != null && coverUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: coverUrl,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  errorWidget: (_, __, ___) => Container(
+                                    color: AppTheme.dividerColor,
+                                    child: const Icon(Icons.book, size: 40),
+                                  ),
+                                )
+                              : Container(
+                                  color: AppTheme.dividerColor,
+                                  child: const Center(
+                                    child: Icon(Icons.book, size: 40),
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        title,
+                        style: const TextStyle(fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '推荐书籍 ${index + 1}',
-                  style: const TextStyle(fontSize: 13),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
   /// 构建更新列表
-  Widget _buildUpdateList() {
+  Widget _buildUpdateList(List<dynamic> items) {
+    if (items.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text('暂无数据'),
+        ),
+      );
+    }
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: 5,
+      itemCount: items.length,
       separatorBuilder: (_, __) => const Divider(),
       itemBuilder: (context, index) {
+        final item = items[index];
+        final title = item is Map ? item['title'] as String? ?? '' : (item.title as String? ?? '');
+        final author = item is Map ? item['author'] as String? ?? '' : (item.author as String? ?? '');
         return ListTile(
-          leading: Container(
-            width: 50,
-            height: 70,
-            decoration: BoxDecoration(
-              color: AppTheme.dividerColor,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          title: Text('更新书籍 ${index + 1}'),
-          subtitle: Text('更新到第${100 - index}章'),
-          trailing: const Text('最新', style: TextStyle(color: AppTheme.accentColor)),
+          leading: _buildSmallCover(
+              item is Map ? item['coverUrl'] as String? : item.coverUrl as String?),
+          title: Text(title),
+          subtitle: Text(author),
         );
       },
     );
   }
 
   /// 构建排行列表
-  Widget _buildRankList() {
+  Widget _buildRankList(List<dynamic> items) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: 10,
+      itemCount: items.length > 10 ? 10 : items.length,
       separatorBuilder: (_, __) => const Divider(),
       itemBuilder: (context, index) {
+        final item = items[index];
+        final title = item is Map ? item['title'] as String? ?? '' : (item.title as String? ?? '');
+        final author = item is Map ? item['author'] as String? ?? '' : (item.author as String? ?? '');
         return ListTile(
           leading: Container(
             width: 28,
@@ -247,14 +400,33 @@ class _DiscoverPageState extends State<DiscoverPage>
               ),
             ),
           ),
-          title: Text('排行书籍 ${index + 1}'),
-          subtitle: Text('作者 ${index + 1}'),
-          trailing: Text(
-            '${(100 - index * 5)}.${index}万',
-            style: const TextStyle(color: AppTheme.textHint, fontSize: 12),
-          ),
+          title: Text(title),
+          subtitle: Text(author),
         );
       },
+    );
+  }
+
+  Widget _buildSmallCover(String? coverUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: SizedBox(
+        width: 50,
+        height: 70,
+        child: coverUrl != null && coverUrl.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: coverUrl,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => Container(
+                  color: AppTheme.dividerColor,
+                  child: const Icon(Icons.book, size: 24),
+                ),
+              )
+            : Container(
+                color: AppTheme.dividerColor,
+                child: const Icon(Icons.book, size: 24),
+              ),
+      ),
     );
   }
 
@@ -269,6 +441,7 @@ class _DiscoverPageState extends State<DiscoverPage>
           label: Text(tag),
           onPressed: () {
             _searchController.text = tag;
+            _executeSearch(tag);
           },
         );
       }).toList(),

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 /// 排版配置模型
 class LayoutConfig {
   /// 字体大小 (sp)
@@ -20,8 +18,8 @@ class LayoutConfig {
   /// 字体族
   String fontFamily;
 
-  /// 字重
-  FontWeight fontWeight;
+  /// 字重 (0=normal, 1=bold, 2-9 对应 w100-w800)
+  int fontWeight;
 
   /// 字间距
   double letterSpacing;
@@ -39,7 +37,7 @@ class LayoutConfig {
     this.margin = 24.0,
     this.indentChars = 2,
     this.fontFamily = 'system',
-    this.fontWeight = FontWeight.normal,
+    this.fontWeight = 0,
     this.letterSpacing = 0.0,
     this.useCustomFont = false,
     this.customFontPath,
@@ -66,7 +64,7 @@ class LayoutConfig {
       margin: (json['margin'] as num?)?.toDouble() ?? 24.0,
       indentChars: json['indent_chars'] as int? ?? 2,
       fontFamily: json['font_family'] as String? ?? 'system',
-      fontWeight: _parseFontWeight(json['font_weight'] as int? ?? 0),
+      fontWeight: json['font_weight'] as int? ?? 0,
       letterSpacing: (json['letter_spacing'] as num?)?.toDouble() ?? 0.0,
       useCustomFont: json['use_custom_font'] as bool? ?? false,
       customFontPath: json['custom_font_path'] as String?,
@@ -81,38 +79,11 @@ class LayoutConfig {
       'margin': margin,
       'indent_chars': indentChars,
       'font_family': fontFamily,
-      'font_weight': fontWeight.index,
+      'font_weight': fontWeight,
       'letter_spacing': letterSpacing,
       'use_custom_font': useCustomFont,
       'custom_font_path': customFontPath,
     };
-  }
-
-  static FontWeight _parseFontWeight(int index) {
-    switch (index) {
-      case 0:
-        return FontWeight.normal;
-      case 1:
-        return FontWeight.bold;
-      case 2:
-        return FontWeight.w100;
-      case 3:
-        return FontWeight.w200;
-      case 4:
-        return FontWeight.w300;
-      case 5:
-        return FontWeight.w400;
-      case 6:
-        return FontWeight.w500;
-      case 7:
-        return FontWeight.w600;
-      case 8:
-        return FontWeight.w700;
-      case 9:
-        return FontWeight.w800;
-      default:
-        return FontWeight.normal;
-    }
   }
 
   LayoutConfig copyWith({
@@ -122,7 +93,7 @@ class LayoutConfig {
     double? margin,
     int? indentChars,
     String? fontFamily,
-    FontWeight? fontWeight,
+    int? fontWeight,
     double? letterSpacing,
     bool? useCustomFont,
     String? customFontPath,

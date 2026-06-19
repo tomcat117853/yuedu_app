@@ -75,7 +75,7 @@ class ScrollTextView extends StatelessWidget {
                 height: layoutConfig.lineHeight,
                 letterSpacing: layoutConfig.letterSpacing,
                 fontFamily: layoutConfig.fontFamily,
-                fontWeight: layoutConfig.fontWeight,
+                fontWeight: _intToFontWeight(layoutConfig.fontWeight),
               ),
               textAlign: TextAlign.justify,
             ),
@@ -88,5 +88,21 @@ class ScrollTextView extends StatelessWidget {
   /// 构建首行缩进
   String _buildIndent() {
     return '\u3000' * layoutConfig.indentChars;
+  }
+
+  /// 将 int 转换为 FontWeight
+  static FontWeight _intToFontWeight(int index) {
+    switch (index) {
+      case 1: return FontWeight.bold;
+      case 2: return FontWeight.w100;
+      case 3: return FontWeight.w200;
+      case 4: return FontWeight.w300;
+      case 5: return FontWeight.w400;
+      case 6: return FontWeight.w500;
+      case 7: return FontWeight.w600;
+      case 8: return FontWeight.w700;
+      case 9: return FontWeight.w800;
+      default: return FontWeight.normal;
+    }
   }
 }

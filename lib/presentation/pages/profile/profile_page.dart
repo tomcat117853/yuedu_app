@@ -1,9 +1,85 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/theme.dart';
+import '../../../config/constants.dart';
+import '../../../config/routes.dart';
+import '../../../domain/services/read_engine.dart';
+import '../../../providers.dart';
 
 /// 个人中心页面
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  int _readingCount = 0;
+  int _finishedCount = 0;
+  int _totalReadingMinutes = 0;
+  int _cacheSize = 0;
+  bool _isLoadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final bookRepository = ref.read(bookRepositoryProvider);
+      final allBooks = await bookRepository.getAllBooks();
+      final allProgress = await bookRepository.getAllProgress();
+
+      int reading = 0;
+      int finished = 0;
+      int totalMinutes = 0;
+
+      for (final book in allBooks) {
+        if (book.status == 1) {
+          finished++;
+        } else if (book.status == 0) {
+          reading++;
+        }
+      }
+
+      for (final progress in allProgress) {
+        totalMinutes += progress.readingTime;
+      }
+
+      // 获取缓存大小
+      final fileService = ref.read(fileServiceProvider);
+      final cacheDir = await fileService.getCacheDirectory();
+      final cacheSize = await fileService.getDirectorySize('$cacheDir/chapters');
+
+      if (mounted) {
+        setState(() {
+          _readingCount = reading;
+          _finishedCount = finished;
+          _totalReadingMinutes = totalMinutes;
+          _cacheSize = cacheSize;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingStats = false);
+      }
+    }
+  }
+
+  String _formatDuration(int minutes) {
+    if (minutes < 60) return '${minutes}分钟';
+    final hours = minutes ~/ 60;
+    final mins = minutes % 60;
+    if (hours < 24) return '$hours小时$mins分钟';
+    final days = hours ~/ 24;
+    return '$days天$hours小时';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,21 +87,22 @@ class ProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('我的'),
       ),
-      body: ListView(
-        children: [
-          // 用户信息卡片
-          _buildUserCard(context),
+      body: RefreshIndicator(
+        onRefresh: _loadStats,
+        child: ListView(
+          children: [
+            // 用户信息卡片
+            _buildUserCard(context),
+            const SizedBox(height: 16),
 
-          const SizedBox(height: 16),
+            // 阅读统计
+            _buildReadingStats(),
+            const SizedBox(height: 16),
 
-          // 阅读统计
-          _buildReadingStats(),
-
-          const SizedBox(height: 16),
-
-          // 设置列表
-          _buildSettingsList(context),
-        ],
+            // 设置列表
+            _buildSettingsList(context),
+          ],
+        ),
       ),
     );
   }
@@ -36,7 +113,7 @@ class ProfilePage extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [AppTheme.primaryColor, AppTheme.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -45,7 +122,6 @@ class ProfilePage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 头像
           Container(
             width: 64,
             height: 64,
@@ -53,14 +129,9 @@ class ProfilePage extends StatelessWidget {
               shape: BoxShape.circle,
               color: Colors.white.withValues(alpha: 0.2),
             ),
-            child: const Icon(
-              Icons.person,
-              size: 32,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.person, size: 32, color: Colors.white),
           ),
           const SizedBox(width: 16),
-          // 用户名和简介
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,11 +155,6 @@ class ProfilePage extends StatelessWidget {
               ],
             ),
           ),
-          // 编辑按钮
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white70),
-            onPressed: () {},
-          ),
         ],
       ),
     );
@@ -96,13 +162,23 @@ class ProfilePage extends StatelessWidget {
 
   /// 阅读统计
   Widget _buildReadingStats() {
+    if (_isLoadingStats) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          _buildStatItem('3', '在读'),
-          _buildStatItem('12', '已读完'),
-          _buildStatItem('156', '总阅读时长'),
+          _buildStatItem('$_readingCount', '在读'),
+          _buildStatItem('$_finishedCount', '已读完'),
+          _buildStatItem(
+            _formatDuration(_totalReadingMinutes),
+            '总阅读时长',
+          ),
         ],
       ),
     );
@@ -147,40 +223,48 @@ class ProfilePage extends StatelessWidget {
           _buildSettingItem(
             icon: Icons.palette_outlined,
             title: '阅读主题',
-            subtitle: '日间模式',
-            onTap: () {},
+            subtitle: Theme.of(context).brightness == Brightness.dark
+                ? '夜间模式'
+                : '日间模式',
+            onTap: () => _showThemeDialog(context),
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
             icon: Icons.text_fields,
             title: '字体设置',
             subtitle: '系统默认',
-            onTap: () {},
+            onTap: () => _showFontSettings(context),
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
             icon: Icons.download_outlined,
             title: '缓存管理',
-            subtitle: '已使用 0 MB',
-            onTap: () {},
+            subtitle: '已使用 ${_formatCacheSize(_cacheSize)}',
+            onTap: () => _showCacheManagement(context),
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
             icon: Icons.backup_outlined,
             title: '数据备份',
-            subtitle: '上次备份: 从未',
-            onTap: () {},
+            subtitle: '本地备份',
+            onTap: () => _backupData(context),
           ),
           const Divider(height: 1, indent: 56),
           _buildSettingItem(
             icon: Icons.info_outline,
             title: '关于',
-            subtitle: '版本 1.0.0',
-            onTap: () {},
+            subtitle: '版本 ${AppConstants.appVersion}',
+            onTap: () => _showAbout(context),
           ),
         ],
       ),
     );
+  }
+
+  String _formatCacheSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   /// 设置项
@@ -196,6 +280,140 @@ class ProfilePage extends StatelessWidget {
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
       trailing: const Icon(Icons.chevron_right, color: AppTheme.textHint),
       onTap: onTap,
+    );
+  }
+
+  /// 显示主题选择对话框
+  void _showThemeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('选择主题'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('跟随系统'),
+              value: 'system',
+              groupValue: _getThemeModeString(),
+              onChanged: (v) {
+                _setThemeMode(v!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('日间模式'),
+              value: 'light',
+              groupValue: _getThemeModeString(),
+              onChanged: (v) {
+                _setThemeMode(v!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('夜间模式'),
+              value: 'dark',
+              groupValue: _getThemeModeString(),
+              onChanged: (v) {
+                _setThemeMode(v!);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getThemeModeString() {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark ? 'dark' : 'light';
+  }
+
+  void _setThemeMode(String mode) async {
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setString(AppConstants.keyThemeMode, mode);
+    } catch (_) {
+      // SharedPreferences 未初始化时忽略
+    }
+    // 通知 app 层更新主题（通过 InheritedWidget 或 Provider）
+    if (mounted) setState(() {});
+  }
+
+  /// 字体设置
+  void _showFontSettings(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('字体设置'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('系统默认'),
+              leading: const Icon(Icons.check, color: AppTheme.primaryColor),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              title: const Text('思源宋体'),
+              leading: const Icon(Icons.circle_outlined),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              title: const Text('方正楷体'),
+              leading: const Icon(Icons.circle_outlined),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 缓存管理
+  void _showCacheManagement(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('缓存管理'),
+        content: Text('当前缓存大小: ${_formatCacheSize(_cacheSize)}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final fileService = ref.read(fileServiceProvider);
+              await fileService.clearCache();
+              if (mounted) {
+                setState(() => _cacheSize = 0);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('缓存已清理')),
+                );
+              }
+            },
+            child: const Text('清理缓存', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 数据备份
+  void _backupData(BuildContext context) {
+    context.push(AppRoutes.backup);
+  }
+
+  /// 关于
+  void _showAbout(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: AppConstants.appName,
+      applicationVersion: AppConstants.appVersion,
+      applicationLegalese: '全平台本地阅读App',
     );
   }
 }

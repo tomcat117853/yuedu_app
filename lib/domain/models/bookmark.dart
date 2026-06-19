@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// 书签模型
 class Bookmark {

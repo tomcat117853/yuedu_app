@@ -1,7 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
-
 import '../models/book.dart';
 import '../models/search_result.dart';
 
@@ -86,7 +84,7 @@ class SourceMatcher {
 
   /// 全角转半角映射
   static const Map<String, String> _fullToHalf = {
-    '\uff01': '!', '\uff02': '"', '\uff03': '#', '\uff04': '$',
+    '\uff01': '!', '\uff02': '"', '\uff03': '#', '\uff04': '\$',
     '\uff05': '%', '\uff06': '&', '\uff07': "'", '\uff08': '(',
     '\uff09': ')', '\uff0a': '*', '\uff0b': '+', '\uff0c': ',',
     '\uff0d': '-', '\uff0e': '.', '\uff0f': '/',

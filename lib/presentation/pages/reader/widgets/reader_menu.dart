@@ -18,6 +18,9 @@ class ReaderMenu extends StatelessWidget {
   final VoidCallback onNextChapter;
   final VoidCallback onToggleTheme;
   final VoidCallback onToggleMode;
+  final VoidCallback onSwitchSource;
+  final void Function(double value)? onPageSliderChanged;
+  final void Function(double value)? onPageSliderChangeEnd;
 
   const ReaderMenu({
     super.key,
@@ -35,6 +38,9 @@ class ReaderMenu extends StatelessWidget {
     required this.onNextChapter,
     required this.onToggleTheme,
     required this.onToggleMode,
+    required this.onSwitchSource,
+    this.onPageSliderChanged,
+    this.onPageSliderChangeEnd,
   });
 
   @override
@@ -64,23 +70,39 @@ class ReaderMenu extends StatelessWidget {
                     onPressed: onBack,
                   ),
                   Expanded(
-                    child: Text(
-                      book?.title ?? '',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          book?.title ?? '',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                        if (totalChapters > 0)
+                          Text(
+                            '${currentChapter + 1}/$totalChapters 章',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   IconButton(
+                    icon: const Icon(Icons.swap_horiz, color: Colors.white),
+                    onPressed: onSwitchSource,
+                    tooltip: '切换书源',
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.more_vert, color: Colors.white),
-                    onPressed: () {
-                      // 显示更多选项
-                    },
+                    onPressed: onShowSettings,
                   ),
                 ],
               ),
@@ -125,7 +147,10 @@ class ReaderMenu extends StatelessWidget {
                               ? (currentPage - 1) / (totalPages - 1)
                               : 0,
                           onChanged: (value) {
-                            // 跳转页面
+                            onPageSliderChanged?.call(value);
+                          },
+                          onChangeEnd: (value) {
+                            onPageSliderChangeEnd?.call(value);
                           },
                           activeColor: Colors.white,
                           inactiveColor: Colors.white24,

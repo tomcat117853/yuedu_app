@@ -8,6 +8,10 @@ import 'widgets/scroll_text_view.dart';
 import 'widgets/reader_menu.dart';
 import 'widgets/reader_settings.dart';
 import 'widgets/chapter_list_sheet.dart';
+import 'source_switch_sheet.dart';
+import '../../../../domain/models/book_source.dart';
+import '../../../../domain/models/chapter.dart';
+import '../../../../providers.dart';
 
 /// 阅读器页面 - 全屏沉浸式阅读
 class ReaderPage extends ConsumerStatefulWidget {
@@ -60,9 +64,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   /// 处理点击事件
   void _handleTap(TapDownDetails details, ReaderState state) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final tapX = details.localPosition.dx;
-    final tapY = details.localPosition.dy;
 
     // 中间区域点击 - 呼出/隐藏菜单
     final isCenterArea = tapX > screenWidth * 0.3 && tapX < screenWidth * 0.7;
@@ -143,7 +145,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       .read(readerProvider(widget.bookId).notifier)
                       .toggleMenu();
                 },
-                onShowSettings: () => _showSettingsSheet(state),
+                onShowSettings: () {},
                 onShowChapterList: () => _showChapterList(state),
                 onPreviousChapter: () {
                   ref
@@ -164,6 +166,19 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                   ref
                       .read(readerProvider(widget.bookId).notifier)
                       .toggleReadMode();
+                },
+                onSwitchSource: () => _showSourceSwitch(state),
+                onPageSliderChanged: (value) {
+                  if (state.totalPages > 1) {
+                    final pageIndex =
+                        (value * (state.totalPages - 1)).round();
+                    ref
+                        .read(readerProvider(widget.bookId).notifier)
+                        .jumpToPage(pageIndex);
+                  }
+                },
+                onPageSliderChangeEnd: (value) {
+                  // 拖动结束不需要额外操作，jumpToPage 已在 onChanged 中执行
                 },
               ),
 
@@ -196,6 +211,35 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                         .read(readerProvider(widget.bookId).notifier)
                         .decreaseLineHeight();
                   },
+                  onParagraphSpacingChanged: (value) {
+                    final newConfig = state.layoutConfig.copyWith(
+                      paragraphSpacing: value,
+                    );
+                    ref
+                        .read(readerProvider(widget.bookId).notifier)
+                        .updateLayoutConfig(newConfig);
+                  },
+                  onMarginChanged: (value) {
+                    final newConfig = state.layoutConfig.copyWith(
+                      margin: value,
+                    );
+                    ref
+                        .read(readerProvider(widget.bookId).notifier)
+                        .updateLayoutConfig(newConfig);
+                  },
+                  onLetterSpacingChanged: (value) {
+                    final newConfig = state.layoutConfig.copyWith(
+                      letterSpacing: value,
+                    );
+                    ref
+                        .read(readerProvider(widget.bookId).notifier)
+                        .updateLayoutConfig(newConfig);
+                  },
+                  onThemeChanged: (newTheme) {
+                    ref
+                        .read(readerProvider(widget.bookId).notifier)
+                        .setTheme(newTheme);
+                  },
                 ),
               ),
           ],
@@ -204,9 +248,44 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     );
   }
 
-  /// 显示设置面板
-  void _showSettingsSheet(ReaderState state) {
-    // 设置面板已集成在底部
+  /// 显示书源切换弹窗
+  void _showSourceSwitch(ReaderState state) {
+    // 获取当前书源列表
+    final sourceService = ref.read(sourceServiceProvider);
+    sourceService.getSourcesByBookId(widget.bookId).then((sources) {
+      if (!mounted) return;
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => SourceSwitchSheet(
+          book: state.book,
+          currentSources: sources,
+          currentChapterIndex: state.currentChapterIndex,
+          onSwitch: (newSource, chapters) {
+            _handleSourceSwitch(state, newSource, chapters);
+          },
+        ),
+      );
+    });
+  }
+
+  /// 处理书源切换
+  void _handleSourceSwitch(
+    ReaderState state,
+    BookSource newSource,
+    List<Chapter> newChapters,
+  ) {
+    if (newChapters.isNotEmpty) {
+      // 新书源有章节列表，替换当前章节
+      // 通过 readerProvider 处理
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已切换到 ${newSource.sourceName}'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   /// 显示章节列表

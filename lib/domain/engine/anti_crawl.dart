@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 /// 反爬虫管理器 - 提供请求伪装和频率控制
 ///
@@ -169,7 +168,7 @@ class _CookieInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
     // 存储响应中的 Set-Cookie
     final setCookies = response.headers['set-cookie'];
     if (setCookies != null && setCookies.isNotEmpty) {

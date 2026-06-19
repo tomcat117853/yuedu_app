@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
-import 'package:flutter/foundation.dart';
 import '../../domain/models/chapter.dart';
 
 /// TXT文件解析器
@@ -139,9 +137,7 @@ class TxtParser {
     StringBuffer currentContent = StringBuffer();
     String currentTitle = '开始';
     int orderIndex = 0;
-    int chapterStartLine = 0;
     int currentLine = 0;
-    int charOffset = 0;
 
     await for (final line in lines) {
       if (_isChapterTitle(line)) {
@@ -160,7 +156,6 @@ class TxtParser {
 
         currentTitle = line.trim();
         currentContent = StringBuffer();
-        chapterStartLine = currentLine;
       } else {
         if (currentContent.isNotEmpty) {
           currentContent.writeln();

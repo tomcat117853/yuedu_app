@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:epubx/epubx.dart';
+import 'package:image/image.dart' as img;
 import '../../domain/models/chapter.dart';
 import '../../domain/models/book.dart';
 
@@ -27,15 +28,14 @@ class EpubParser {
     // 提取书籍信息
     final title = epubBook.Title ?? '未知书名';
     final author = epubBook.Author ?? '未知作者';
-    final description = epubBook.Description ?? '';
+    const description = ''; // epubx EpubBook 不提供 Description 属性
 
     // 提取封面图片
     String? coverPath;
     if (epubBook.CoverImage != null) {
-      // 保存封面图片到本地
       coverPath = filePath.replaceAll('.epub', '_cover.jpg');
       final coverFile = File(coverPath);
-      await coverFile.writeAsBytes(epubBook.CoverImage!);
+      await coverFile.writeAsBytes(img.encodeJpg(epubBook.CoverImage!));
     }
 
     // 提取章节列表
@@ -97,13 +97,6 @@ class EpubParser {
             .replaceAll(RegExp(r'<[^>]*>'), '')
             .replaceAll(RegExp(r'\s+'), '')
             .length;
-      } else if (epubChapter.ContentFileName != null &&
-          epubChapter.Content != null) {
-        content = epubChapter.Content!.Content ?? '';
-        wordCount = content
-            .replaceAll(RegExp(r'<[^>]*>'), '')
-            .replaceAll(RegExp(r'\s+'), '')
-            .length;
       }
 
       chapters.add(Chapter(
@@ -144,13 +137,7 @@ class EpubParser {
     if (chapterIndex < 0 || chapterIndex >= flatChapters.length) return '';
 
     final chapter = flatChapters[chapterIndex];
-    if (chapter.HtmlContent != null) {
-      return chapter.HtmlContent!;
-    }
-    if (chapter.Content != null) {
-      return chapter.Content!.Content ?? '';
-    }
-    return '';
+    return chapter.HtmlContent ?? '';
   }
 
   /// 获取指定章节的纯文本内容

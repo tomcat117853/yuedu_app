@@ -118,7 +118,7 @@ class BookshelfPage extends ConsumerWidget {
               color: AppTheme.textHint.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               '书架空空如也',
               style: TextStyle(
                 color: AppTheme.textHint,
@@ -126,7 +126,7 @@ class BookshelfPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               '点击右上角添加书籍',
               style: TextStyle(
                 color: AppTheme.textHint,
@@ -148,7 +148,7 @@ class BookshelfPage extends ConsumerWidget {
             .toList();
 
     if (filteredBooks.isEmpty) {
-      return Center(
+      return const Center(
         child: Text(
           '没有找到匹配的书籍',
           style: TextStyle(color: AppTheme.textHint),

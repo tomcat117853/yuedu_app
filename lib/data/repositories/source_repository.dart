@@ -2,14 +2,13 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/models/book_source.dart';
 import '../../domain/models/search_result.dart';
-import '../database/app_database.dart';
-import '../database/tables/book_sources.dart';
+import '../database/app_database.dart' as db;
 
 const _uuid = Uuid();
 
 /// 书源仓库
 class SourceRepository {
-  final AppDatabase _db;
+  final db.AppDatabase _db;
 
   SourceRepository(this._db);
 
@@ -107,20 +106,20 @@ class SourceRepository {
   }
 
   /// 领域模型转数据库Companion
-  BookSourcesCompanion _modelToCompanion(BookSource source) {
-    return BookSourcesCompanion(
-      id: drift.Value(source.id),
-      bookId: drift.Value(source.bookId),
-      sourceId: drift.Value(source.sourceId),
-      sourceName: drift.Value(source.sourceName),
-      bookKey: drift.Value(source.bookKey),
-      isPrimary: drift.Value(source.isPrimary),
-      confidence: drift.Value(source.confidence),
-      score: drift.Value(source.score),
-      lastCheck: drift.Value(source.lastCheck),
-      lastAvailable: drift.Value(source.lastAvailable),
-      chapterCount: drift.Value(source.chapterCount),
-      enabled: drift.Value(source.enabled),
+  db.BookSourcesCompanion _modelToCompanion(BookSource source) {
+    return db.BookSourcesCompanion(
+      id: Value(source.id),
+      bookId: Value(source.bookId),
+      sourceId: Value(source.sourceId),
+      sourceName: Value(source.sourceName),
+      bookKey: Value(source.bookKey),
+      isPrimary: Value(source.isPrimary),
+      confidence: Value(source.confidence),
+      score: Value(source.score),
+      lastCheck: Value(source.lastCheck),
+      lastAvailable: Value(source.lastAvailable),
+      chapterCount: Value(source.chapterCount),
+      enabled: Value(source.enabled),
     );
   }
 }

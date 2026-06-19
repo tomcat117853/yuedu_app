@@ -33,7 +33,7 @@ class BookSources extends Table {
   DateTimeColumn get lastAvailable => dateTime().nullable()();
 
   /// 章节数量
-  IntegerColumn get chapterCount => integer().withDefault(const Constant(0))();
+  IntColumn get chapterCount => integer().withDefault(const Constant(0))();
 
   /// 是否启用
   BoolColumn get enabled => boolean().withDefault(const Constant(true))();

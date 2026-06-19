@@ -275,49 +275,55 @@ class ReaderNotifier extends StateNotifier<ReaderState> {
     state = state.copyWith(readerTheme: ReaderTheme.presets[nextIndex]);
   }
 
+  /// 设置主题
+  void setTheme(ReaderTheme newTheme) {
+    state = state.copyWith(readerTheme: newTheme);
+  }
+
   /// 更新排版配置
-  void updateLayoutConfig(LayoutConfig config) async {
-    state = state.copyWith(layoutConfig: config);
-    // 通过阅读引擎更新排版并重新分页
+  Future<void> updateLayoutConfig(LayoutConfig config) async {
+    // 先更新引擎配置并完成分页
     await _readEngine.updateLayoutConfig(config);
-    // 分页完成后更新 UI
+    
+    // 分页完成后一次性更新所有状态
     final pageText = _readEngine.getCurrentPageText();
     state = state.copyWith(
+      layoutConfig: config,
       totalPages: _readEngine.totalPages,
       currentPageText: pageText,
     );
   }
 
   /// 增大字体
-  void increaseFontSize() {
+  Future<void> increaseFontSize() async {
     final newConfig = state.layoutConfig.copyWith(
       fontSize: (state.layoutConfig.fontSize + 1).clamp(12.0, 32.0),
     );
-    updateLayoutConfig(newConfig);
+    await updateLayoutConfig(newConfig);
   }
 
   /// 减小字体
-  void decreaseFontSize() {
+  Future<void> decreaseFontSize() async {
     final newConfig = state.layoutConfig.copyWith(
       fontSize: (state.layoutConfig.fontSize - 1).clamp(12.0, 32.0),
     );
-    updateLayoutConfig(newConfig);
+    await updateLayoutConfig(newConfig);
   }
 
   /// 增大行距
-  void increaseLineHeight() {
+  Future<void> increaseLineHeight() async {
     final newConfig = state.layoutConfig.copyWith(
       lineHeight: (state.layoutConfig.lineHeight + 0.1).clamp(1.0, 3.0),
     );
-    updateLayoutConfig(newConfig);
+    await updateLayoutConfig(newConfig);
   }
 
   /// 减小行距
-  void decreaseLineHeight() {
+  Future<void> decreaseLineHeight() async {
     final newConfig = state.layoutConfig.copyWith(
       lineHeight: (state.layoutConfig.lineHeight - 0.1).clamp(1.0, 3.0),
     );
-    updateLayoutConfig(newConfig);
+    await updateLayoutConfig(newConfig);
   }
 
   @override

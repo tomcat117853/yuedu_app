@@ -5,17 +5,13 @@ import '../../domain/models/chapter.dart';
 import '../../domain/models/chapter_content.dart';
 import '../../domain/models/read_progress.dart';
 import '../../domain/models/bookmark.dart';
-import '../database/app_database.dart';
-import '../database/tables/books.dart';
-import '../database/tables/chapters.dart';
-import '../database/tables/read_progress.dart';
-import '../database/tables/bookmarks.dart';
+import '../database/app_database.dart' as db;
 
 const _uuid = Uuid();
 
 /// 书籍仓库 - 封装数据库操作，提供领域模型转换
 class BookRepository {
-  final AppDatabase _db;
+  final db.AppDatabase _db;
 
   BookRepository(this._db);
 
@@ -54,6 +50,11 @@ class BookRepository {
   /// 插入单个章节
   Future<void> insertChapter(Chapter chapter) async {
     await _db.chapterDao.insertChapter(_chapterModelToCompanion(chapter));
+  }
+
+  /// 更新章节（用于更新缓存状态等）
+  Future<void> updateChapter(Chapter chapter) async {
+    await _db.chapterDao.updateChapter(_chapterModelToCompanion(chapter));
   }
 
   /// 更新书籍
@@ -100,7 +101,6 @@ class BookRepository {
     String content = '';
     if (chapter.contentPath != null) {
       try {
-        final file = _db as dynamic;
         content = '已缓存内容'; // 实际从文件读取
       } catch (_) {
         content = '';
@@ -121,15 +121,15 @@ class BookRepository {
   /// 保存阅读进度
   Future<void> saveReadProgress(ReadProgress progress) async {
     await _db.progressDao.saveProgress(
-      ReadProgressTableCompanion(
-        bookId: drift.Value(progress.bookId),
-        chapterIndex: drift.Value(progress.chapterIndex),
-        pageIndex: drift.Value(progress.pageIndex),
-        charOffset: drift.Value(progress.charOffset),
-        scrollOffset: drift.Value(progress.scrollOffset),
-        readingTime: drift.Value(progress.readingTime),
-        lastReadAt: drift.Value(progress.lastReadAt),
-        progressPercent: drift.Value(progress.progressPercent),
+      db.ReadProgressTableCompanion(
+        bookId: Value(progress.bookId),
+        chapterIndex: Value(progress.chapterIndex),
+        pageIndex: Value(progress.pageIndex),
+        charOffset: Value(progress.charOffset),
+        scrollOffset: Value(progress.scrollOffset),
+        readingTime: Value(progress.readingTime),
+        lastReadAt: Value(progress.lastReadAt),
+        progressPercent: Value(progress.progressPercent),
       ),
     );
   }
@@ -156,14 +156,14 @@ class BookRepository {
   /// 添加书签
   Future<void> insertBookmark(Bookmark bookmark) async {
     await _db.progressDao.insertBookmark(
-      BookmarksCompanion(
-        id: drift.Value(bookmark.id),
-        bookId: drift.Value(bookmark.bookId),
-        chapterIndex: drift.Value(bookmark.chapterIndex),
-        charOffset: drift.Value(bookmark.charOffset),
-        label: drift.Value(bookmark.label),
-        color: drift.Value(bookmark.color),
-        createdAt: drift.Value(bookmark.createdAt),
+      db.BookmarksCompanion(
+        id: Value(bookmark.id),
+        bookId: Value(bookmark.bookId),
+        chapterIndex: Value(bookmark.chapterIndex),
+        charOffset: Value(bookmark.charOffset),
+        label: Value(bookmark.label),
+        color: Value(bookmark.color),
+        createdAt: Value(bookmark.createdAt),
       ),
     );
   }
@@ -190,7 +190,7 @@ class BookRepository {
   // ==================== 转换方法 ====================
 
   /// 数据库实体转领域模型
-  Book _entityToModel(Book entity) {
+  Book _entityToModel(db.Book entity) {
     return Book(
       id: entity.id,
       title: entity.title,
@@ -212,29 +212,29 @@ class BookRepository {
   }
 
   /// 领域模型转数据库Companion
-  BooksCompanion _modelToCompanion(Book book) {
-    return BooksCompanion(
-      id: drift.Value(book.id),
-      title: drift.Value(book.title),
-      author: drift.Value(book.author),
-      coverPath: drift.Value(book.coverPath),
-      intro: drift.Value(book.intro),
-      category: drift.Value(book.category),
-      type: drift.Value(book.type),
-      localPath: drift.Value(book.localPath),
-      format: drift.Value(book.format),
-      totalChapters: drift.Value(book.totalChapters),
-      wordCount: drift.Value(book.wordCount),
-      status: drift.Value(book.status),
-      createdAt: drift.Value(book.createdAt),
-      updatedAt: drift.Value(book.updatedAt),
-      groupId: drift.Value(book.groupId),
-      sortOrder: drift.Value(book.sortOrder),
+  db.BooksCompanion _modelToCompanion(Book book) {
+    return db.BooksCompanion(
+      id: Value(book.id),
+      title: Value(book.title),
+      author: Value(book.author),
+      coverPath: Value(book.coverPath),
+      intro: Value(book.intro),
+      category: Value(book.category),
+      type: Value(book.type),
+      localPath: Value(book.localPath),
+      format: Value(book.format),
+      totalChapters: Value(book.totalChapters),
+      wordCount: Value(book.wordCount),
+      status: Value(book.status),
+      createdAt: Value(book.createdAt),
+      updatedAt: Value(book.updatedAt),
+      groupId: Value(book.groupId),
+      sortOrder: Value(book.sortOrder),
     );
   }
 
   /// 章节实体转模型
-  Chapter _chapterEntityToModel(Chapter entity) {
+  Chapter _chapterEntityToModel(db.Chapter entity) {
     return Chapter(
       id: entity.id,
       bookId: entity.bookId,
@@ -251,24 +251,24 @@ class BookRepository {
   }
 
   /// 章节模型转数据库Companion
-  ChaptersCompanion _chapterModelToCompanion(Chapter chapter) {
-    return ChaptersCompanion(
-      id: drift.Value(chapter.id),
-      bookId: drift.Value(chapter.bookId),
-      sourceId: drift.Value(chapter.sourceId),
-      chapterKey: drift.Value(chapter.chapterKey),
-      title: drift.Value(chapter.title),
-      orderIndex: drift.Value(chapter.orderIndex),
-      contentPath: drift.Value(chapter.contentPath),
-      isCached: drift.Value(chapter.isCached),
-      isVip: drift.Value(chapter.isVip),
-      wordCount: drift.Value(chapter.wordCount),
-      fetchedAt: drift.Value(chapter.fetchedAt),
+  db.ChaptersCompanion _chapterModelToCompanion(Chapter chapter) {
+    return db.ChaptersCompanion(
+      id: Value(chapter.id),
+      bookId: Value(chapter.bookId),
+      sourceId: Value(chapter.sourceId),
+      chapterKey: Value(chapter.chapterKey),
+      title: Value(chapter.title),
+      orderIndex: Value(chapter.orderIndex),
+      contentPath: Value(chapter.contentPath),
+      isCached: Value(chapter.isCached),
+      isVip: Value(chapter.isVip),
+      wordCount: Value(chapter.wordCount),
+      fetchedAt: Value(chapter.fetchedAt),
     );
   }
 
   /// 阅读进度实体转模型
-  ReadProgress _progressEntityToModel(ReadProgress entity) {
+  ReadProgress _progressEntityToModel(db.ReadProgressTableData entity) {
     return ReadProgress(
       bookId: entity.bookId,
       chapterIndex: entity.chapterIndex,
@@ -282,7 +282,7 @@ class BookRepository {
   }
 
   /// 书签实体转模型
-  Bookmark _bookmarkEntityToModel(Bookmark entity) {
+  Bookmark _bookmarkEntityToModel(db.Bookmark entity) {
     return Bookmark(
       id: entity.id,
       bookId: entity.bookId,
