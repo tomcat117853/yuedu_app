@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../domain/models/source_definition.dart';
 import '../../../providers.dart';
 import 'discover_provider.dart';
 import 'book_detail_page.dart';

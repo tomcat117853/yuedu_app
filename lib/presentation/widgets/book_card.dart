@@ -35,7 +35,7 @@ class BookCard extends StatelessWidget {
                 color: _getCoverColor(book),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -65,7 +65,7 @@ class BookCard extends StatelessWidget {
                               Icon(
                                 Icons.menu_book,
                                 size: 32,
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                               ),
                               const SizedBox(height: 8),
                               Padding(
@@ -73,7 +73,7 @@ class BookCard extends StatelessWidget {
                                 child: Text(
                                   book.title,
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                   ),

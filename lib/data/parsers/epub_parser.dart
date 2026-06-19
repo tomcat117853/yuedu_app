@@ -43,7 +43,7 @@ class EpubParser {
     final bookId = filePath.hashCode.toRadixString(36);
 
     if (epubBook.Chapters != null) {
-      int orderIndex = 0;
+      const int orderIndex = 0;
       _extractChaptersFromNav(epubBook.Chapters!, bookId, chapters, orderIndex);
     }
 

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../config/theme.dart';
 import '../../../config/constants.dart';
 import '../../../config/routes.dart';
-import '../../../domain/services/read_engine.dart';
 import '../../../providers.dart';
 
 /// 个人中心页面
@@ -73,7 +70,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   String _formatDuration(int minutes) {
-    if (minutes < 60) return '${minutes}分钟';
+    if (minutes < 60) return '$minutes分钟';
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
     if (hours < 24) return '$hours小时$mins分钟';
@@ -115,7 +112,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+          colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -128,7 +125,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
             ),
             child: const Icon(Icons.person, size: 32, color: Colors.white),
           ),
@@ -149,7 +146,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 Text(
                   '阅读是一种生活方式',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
                   ),
                 ),

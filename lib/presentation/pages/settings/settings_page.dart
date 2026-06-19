@@ -165,9 +165,9 @@ class SettingsPage extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Column(
         children: [
-          ListTile(
-            title: const Text('版本信息'),
-            subtitle: const Text('v1.0.0'),
+          const ListTile(
+            title: Text('版本信息'),
+            subtitle: Text('v1.0.0'),
           ),
           const Divider(height: 1),
           ListTile(
@@ -180,14 +180,14 @@ class SettingsPage extends ConsumerWidget {
             },
           ),
           const Divider(height: 1),
-          ListTile(
-            title: const Text('用户协议'),
-            trailing: const Icon(Icons.chevron_right),
+          const ListTile(
+            title: Text('用户协议'),
+            trailing: Icon(Icons.chevron_right),
           ),
           const Divider(height: 1),
-          ListTile(
-            title: const Text('隐私政策'),
-            trailing: const Icon(Icons.chevron_right),
+          const ListTile(
+            title: Text('隐私政策'),
+            trailing: Icon(Icons.chevron_right),
           ),
         ],
       ),

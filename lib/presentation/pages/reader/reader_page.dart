@@ -52,7 +52,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final tapX = details.localPosition.dx;
 
-  void _onChapterSelected(int index) {
+  void onChapterSelected(int index) {
     ref.read(readerProvider.notifier).jumpToChapter(index);
     setState(() => _showToc = false);
   }
@@ -74,7 +74,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               child: state.isLoading
                   ? Center(
                       child: CircularProgressIndicator(
-                        color: state.readerTheme.textColor.withOpacity(0.5),
+                        color: state.readerTheme.textColor.withValues(alpha: 0.5),
                       ),
                     )
                   : state.readMode == 0
@@ -117,7 +117,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       .toggleMenu();
                 },
                 onShowSettings: () {},
-                onShowChapterList: () => _showChapterList(state),
+                onShowChapterList: () => showChapterList(state),
                 onPreviousChapter: () {
                   ref
                       .read(readerProvider.notifier)
@@ -138,7 +138,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       .read(readerProvider.notifier)
                       .toggleReadMode();
                 },
-                onSwitchSource: () => _showSourceSwitch(state),
+                onSwitchSource: () => showSourceSwitch(state),
                 onPageSliderChanged: (value) {
                   if (state.totalPages > 1) {
                     final pageIndex =
@@ -234,7 +234,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                     child: ReaderToc(
                       chapters: state.chapters,
                       currentIndex: state.currentChapterIndex,
-                      onChapterSelected: _onChapterSelected,
+                      onChapterSelected: onChapterSelected,
                     ),
                   ),
                 Positioned(
@@ -267,7 +267,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   /// 显示书源切换弹窗
-  void _showSourceSwitch(ReaderState state) {
+  void showSourceSwitch(ReaderState state) {
     // 获取当前书源列表
     final sourceService = ref.read(sourceServiceProvider);
     sourceService.getSourcesByBookId(widget.bookId).then((sources) {
@@ -281,7 +281,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           currentSources: sources,
           currentChapterIndex: state.currentChapterIndex,
           onSwitch: (newSource, chapters) {
-            _handleSourceSwitch(state, newSource, chapters);
+            handleSourceSwitch(state, newSource, chapters);
           },
         ),
       );
@@ -289,7 +289,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   /// 处理书源切换
-  void _handleSourceSwitch(
+  void handleSourceSwitch(
     ReaderState state,
     BookSource newSource,
     List<Chapter> newChapters,
@@ -307,7 +307,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   /// 显示章节列表
-  void _showChapterList(ReaderState state) {
+  void showChapterList(ReaderState state) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

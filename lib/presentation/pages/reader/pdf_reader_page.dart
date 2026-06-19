@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/parsers/pdf_parser.dart';
-import '../../../providers.dart';
 
 /// PDF 阅读页面
 ///
@@ -132,7 +130,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                   const SizedBox(height: 4),
                   Text(
                     '请在 pubspec.yaml 中添加 syncfusion_flutter_pdfviewer',
-                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6), fontSize: 12),
+                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6), fontSize: 12),
                   ),
                 ],
               ),
@@ -147,7 +145,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
             color: Theme.of(context).colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, -2),
               ),

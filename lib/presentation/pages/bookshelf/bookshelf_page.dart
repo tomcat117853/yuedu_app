@@ -87,7 +87,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
               onSelected: (_) {
                 ref.read(bookshelfProvider.notifier).switchGroup(group['id']!);
               },
-              selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
               labelStyle: TextStyle(
                 color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).hintColor,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -131,7 +131,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             Icon(
               Icons.menu_book_outlined,
               size: 80,
-              color: theme.hintColor.withOpacity(0.5),
+              color: theme.hintColor.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(

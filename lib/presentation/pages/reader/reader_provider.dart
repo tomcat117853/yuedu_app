@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../domain/models/book.dart';
-import '../../../domain/models/chapter.dart';
 import '../../../domain/models/layout_config.dart';
 import '../../../domain/models/reader_state.dart';
 import '../../../domain/models/reader_theme.dart';

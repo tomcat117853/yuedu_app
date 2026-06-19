@@ -68,7 +68,7 @@ class SourceService {
         .where((d) => d.enabled && d.searchUrl.isNotEmpty)
         .map((def) async {
       try {
-        final results = await _engine!.executeSearch(def, query);
+        final results = await _engine.executeSearch(def, query);
         return results;
       } catch (e) {
         debugPrint('[SourceService] 搜索书源 ${def.bookSourceName} 失败: $e');
@@ -108,7 +108,7 @@ class SourceService {
     // 如果有 SourceEngine 和定义，使用引擎做真实检查
     if (_engine != null && definition != null) {
       try {
-        final isAvailable = await _engine!.executeHealthCheck(definition);
+        final isAvailable = await _engine.executeHealthCheck(definition);
         await _sourceRepository.updateSource(
           source.copyWith(
             lastAvailable: isAvailable ? DateTime.now() : source.lastAvailable,

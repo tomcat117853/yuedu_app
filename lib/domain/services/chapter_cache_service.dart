@@ -6,7 +6,6 @@ import '../../data/repositories/source_repository.dart';
 import '../../domain/models/source_definition.dart';
 import '../engine/source_engine.dart';
 import '../../domain/models/book_source.dart';
-import '../../domain/models/book_source_protocol.dart';
 import '../../platform/file_service.dart';
 
 /// 章节缓存服务 - 预加载和缓存章节内容
@@ -102,7 +101,7 @@ class ChapterCacheService {
         sourceDef,
         bookKey,
         chapter.chapterKey,
-      ) as SourceChapterContent;
+      );
 
       // 保存到文件缓存
       final plainText = content.content;

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../config/theme.dart';
 import '../../../domain/models/book_source_protocol.dart';
 import '../../../domain/models/search_result.dart';
 import '../../../domain/models/source_definition.dart';
-import '../../../providers.dart';
 import 'discover_provider.dart';
 
 /// 书籍详情页 - 展示在线书籍的完整信息
@@ -164,7 +162,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colorScheme.primary.withOpacity(0.8),
+                    colorScheme.primary.withValues(alpha: 0.8),
                     colorScheme.primary,
                   ],
                 ),
@@ -197,7 +195,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                           Text(
                             detail.author,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 14,
                             ),
                           ),
@@ -218,7 +216,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                           Text(
                             '来源: ${detail.sourceName}',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                               fontSize: 12,
                             ),
                           ),
@@ -379,7 +377,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

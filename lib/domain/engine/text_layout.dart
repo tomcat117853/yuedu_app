@@ -14,8 +14,11 @@ class TextLayout {
     double width = 0;
     for (int i = 0; i < text.length; i++) {
       final codeUnit = text.codeUnitAt(i);
-      if (codeUnit > 127) width += config.fontSize;
-      else width += config.fontSize * 0.6;
+      if (codeUnit > 127) {
+        width += config.fontSize;
+      } else {
+        width += config.fontSize * 0.6;
+      }
       width += config.letterSpacing;
     }
     return width;
