@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
-import '../../../providers.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import '../../../config/routes.dart';
 import '../reader/reader_page.dart';
 import 'bookshelf_provider.dart';
@@ -16,6 +16,8 @@ class BookshelfPage extends ConsumerStatefulWidget {
 }
 
 class _BookshelfPageState extends ConsumerState<BookshelfPage> {
+  bool _isDragging = false;
+
   @override
   void initState() {
     super.initState();
@@ -51,12 +53,108 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           ),
         ],
       ),
-      body: _buildBookList(context, state),
+      body: DropTarget(
+        onDragDone: (detail) => _handleFileDrop(detail),
+        onDragEntered: (detail) => setState(() => _isDragging = true),
+        onDragExited: (detail) => setState(() => _isDragging = false),
+        child: Stack(
+          children: [
+            _buildBookList(context, state),
+            if (_isDragging) _buildDropOverlay(),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddBookDialog(context),
         child: const Icon(Icons.add),
       ),
     );
+  }
+  
+  /// 构建拖拽提示覆盖层
+  Widget _buildDropOverlay() {
+    return Container(
+      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary,
+              width: 2,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.file_download,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '释放文件以导入书籍',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '支持 TXT、EPUB 格式',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).hintColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  /// 处理文件拖拽
+  Future<void> _handleFileDrop(DropDoneDetails detail) async {
+    setState(() => _isDragging = false);
+    
+    final validExtensions = ['.txt', '.epub'];
+    int importCount = 0;
+    
+    for (final file in detail.files) {
+      final path = file.path;
+      final extension = path.toLowerCase();
+      
+      // 检查文件扩展名
+      if (!validExtensions.any((ext) => extension.endsWith(ext))) {
+        continue;
+      }
+      
+      try {
+        await ref.read(bookshelfProvider.notifier).importLocalBook(path);
+        importCount++;
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('导入失败: $e')),
+          );
+        }
+      }
+    }
+    
+    if (importCount > 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('成功导入 $importCount 本书籍')),
+      );
+    } else if (detail.files.isNotEmpty && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未找到支持的文件格式')),
+      );
+    }
   }
 
   /// 构建书籍列表
@@ -99,8 +197,13 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              '点击右上角添加书籍',
+              '点击 + 或拖拽文件添加书籍',
               style: TextStyle(color: theme.hintColor, fontSize: 14),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '支持 TXT、EPUB 格式',
+              style: TextStyle(color: theme.hintColor.withOpacity(0.6), fontSize: 12),
             ),
           ],
         ),
