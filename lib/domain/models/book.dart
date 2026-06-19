@@ -8,7 +8,7 @@ class Book {
   String? category;
   String type; // local, online, hybrid
   String? localPath;
-  String format; // txt, epub, pdf
+  String format; // txt, epub, pdf, mobi, azw, azw3, azw4, pdb, tpz, ereader
   int totalChapters;
   int wordCount;
   int status; // 0=reading, 1=finished, 2=archived

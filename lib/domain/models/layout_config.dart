@@ -41,6 +41,15 @@ class LayoutConfig {
   /// 自定义字体路径
   final String? customFontPath;
 
+  /// 翻页效果类型
+  final PageTransition pageTransition;
+
+  /// 翻页动画时长 (毫秒)
+  final int pageAnimDuration;
+
+  /// 阅读模式: 0=翻页, 1=滚动
+  final int readMode;
+
   const LayoutConfig({
     this.fontSize = 18.0,
     this.lineHeight = 1.6,
@@ -55,6 +64,9 @@ class LayoutConfig {
     this.followSystemTheme = false,
     this.useCustomFont = false,
     this.customFontPath,
+    this.pageTransition = PageTransition.simulation,
+    this.pageAnimDuration = 300,
+    this.readMode = 0,
   });
 
   /// 默认配置
@@ -109,6 +121,9 @@ class LayoutConfig {
       followSystemTheme: json['follow_system_theme'] as bool? ?? false,
       useCustomFont: json['use_custom_font'] as bool? ?? false,
       customFontPath: json['custom_font_path'] as String?,
+      pageTransition: PageTransition.values[json['page_transition'] as int? ?? 1],
+      pageAnimDuration: json['page_anim_duration'] as int? ?? 300,
+      readMode: json['read_mode'] as int? ?? 0,
     );
   }
 
@@ -126,6 +141,9 @@ class LayoutConfig {
       'follow_system_theme': followSystemTheme,
       'use_custom_font': useCustomFont,
       'custom_font_path': customFontPath,
+      'page_transition': pageTransition.index,
+      'page_anim_duration': pageAnimDuration,
+      'read_mode': readMode,
     };
   }
 
@@ -143,6 +161,9 @@ class LayoutConfig {
     bool? followSystemTheme,
     bool? useCustomFont,
     String? customFontPath,
+    PageTransition? pageTransition,
+    int? pageAnimDuration,
+    int? readMode,
   }) {
     return LayoutConfig(
       fontSize: fontSize ?? this.fontSize,
@@ -158,6 +179,9 @@ class LayoutConfig {
       followSystemTheme: followSystemTheme ?? this.followSystemTheme,
       useCustomFont: useCustomFont ?? this.useCustomFont,
       customFontPath: customFontPath ?? this.customFontPath,
+      pageTransition: pageTransition ?? this.pageTransition,
+      pageAnimDuration: pageAnimDuration ?? this.pageAnimDuration,
+      readMode: readMode ?? this.readMode,
     );
   }
 
@@ -185,4 +209,42 @@ enum LetterSpacing {
   tight,
   normal,
   loose,
+}
+
+/// 翻页效果类型
+enum PageTransition {
+  none,       // 无动画
+  simulation, // 仿真翻页
+  slide,      // 滑动
+  curl,       // 卷曲
+  fade,       // 淡入淡出
+  pan,        // 平移
+}
+
+/// 内置字体选项
+class BuiltInFonts {
+  static const List<FontOption> options = [
+    FontOption('system', '系统默认'),
+    FontOption('serif', '宋体'),
+    FontOption('sans-serif', '黑体'),
+    FontOption('monospace', '等宽字体'),
+    FontOption('cursive', '手写体'),
+    FontOption('fangsong', '仿宋'),
+  ];
+
+  static String getDisplayName(String fontFamily) {
+    final option = options.firstWhere(
+      (f) => f.fontFamily == fontFamily,
+      orElse: () => FontOption(fontFamily, fontFamily),
+    );
+    return option.displayName;
+  }
+}
+
+/// 字体选项
+class FontOption {
+  final String fontFamily;
+  final String displayName;
+
+  const FontOption(this.fontFamily, this.displayName);
 }

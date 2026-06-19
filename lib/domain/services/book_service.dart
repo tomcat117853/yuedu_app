@@ -7,6 +7,7 @@ import '../models/chapter_content.dart';
 import '../models/read_progress.dart';
 import '../../data/repositories/book_repository.dart';
 import '../../data/parsers/txt_parser.dart';
+import '../../data/parsers/ebook_parser.dart';
 
 /// 书籍服务 - 处理书籍相关的业务逻辑
 class BookService {
@@ -94,6 +95,23 @@ class BookService {
           orderIndex: 0,
         ),
       ];
+    } else if (['azw', 'azw3', 'azw4', 'mobi', 'pdb', 'tpz', 'ereader'].contains(extension)) {
+      // MOBI/AZW/PDB 系列格式
+      final parser = EbookParser();
+      final result = await parser.parse(filePath);
+      chapters = result.chapters.map((ch) => Chapter(
+        id: '${bookId}_ch_${ch.orderIndex}',
+        bookId: bookId,
+        title: ch.title,
+        orderIndex: ch.orderIndex,
+        chapterKey: ch.chapterKey,
+        contentPath: ch.contentPath,
+        isCached: ch.isCached,
+        isVip: ch.isVip,
+        wordCount: ch.wordCount,
+        fetchedAt: ch.fetchedAt,
+      )).toList();
+      wordCount = chapters.fold(0, (sum, ch) => sum + (ch.wordCount ?? 0));
     } else {
       throw Exception('不支持的文件格式: $extension');
     }

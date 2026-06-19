@@ -52,6 +52,123 @@ class ReaderTheme {
       textColor: Color(0xFF000000),
       hintColor: Color(0xFF888888),
     ),
+    // === 扩展主题 ===
+    ReaderTheme(
+      themeIndex: 4,
+      name: '灰阶',
+      backgroundColor: Color(0xFF3A3A3A),
+      textColor: Color(0xFFB8B8B8),
+      hintColor: Color(0xFF707070),
+    ),
+    ReaderTheme(
+      themeIndex: 5,
+      name: '深夜',
+      backgroundColor: Color(0xFF0D1117),
+      textColor: Color(0xFF8B949E),
+      hintColor: Color(0xFF484F58),
+    ),
+    ReaderTheme(
+      themeIndex: 6,
+      name: '羊皮纸',
+      backgroundColor: Color(0xFFF5E6C8),
+      textColor: Color(0xFF4A3728),
+      hintColor: Color(0xFF8B7355),
+    ),
+    ReaderTheme(
+      themeIndex: 7,
+      name: '薄荷',
+      backgroundColor: Color(0xFFE8F5E9),
+      textColor: Color(0xFF2E7D32),
+      hintColor: Color(0xFF81C784),
+    ),
+    ReaderTheme(
+      themeIndex: 8,
+      name: '星空',
+      backgroundColor: Color(0xFF1A1A2E),
+      textColor: Color(0xFFB8C5D6),
+      hintColor: Color(0xFF5C6B7A),
+    ),
+    ReaderTheme(
+      themeIndex: 9,
+      name: '暖黄',
+      backgroundColor: Color(0xFFFFF8E1),
+      textColor: Color(0xFF5D4037),
+      hintColor: Color(0xFFA1887F),
+    ),
+    ReaderTheme(
+      themeIndex: 10,
+      name: '血红',
+      backgroundColor: Color(0xFF1A0000),
+      textColor: Color(0xFFEF9A9A),
+      hintColor: Color(0xFF8B0000),
+    ),
+    ReaderTheme(
+      themeIndex: 11,
+      name: '蓝眸',
+      backgroundColor: Color(0xFFE3F2FD),
+      textColor: Color(0xFF1565C0),
+      hintColor: Color(0xFF64B5F6),
+    ),
+  ];
+
+  /// 扩展主题列表（不包括前4个基础主题）
+  static const List<ReaderTheme> extendedPresets = [
+    ReaderTheme(
+      themeIndex: 4,
+      name: '灰阶',
+      backgroundColor: Color(0xFF3A3A3A),
+      textColor: Color(0xFFB8B8B8),
+      hintColor: Color(0xFF707070),
+    ),
+    ReaderTheme(
+      themeIndex: 5,
+      name: '深夜',
+      backgroundColor: Color(0xFF0D1117),
+      textColor: Color(0xFF8B949E),
+      hintColor: Color(0xFF484F58),
+    ),
+    ReaderTheme(
+      themeIndex: 6,
+      name: '羊皮纸',
+      backgroundColor: Color(0xFFF5E6C8),
+      textColor: Color(0xFF4A3728),
+      hintColor: Color(0xFF8B7355),
+    ),
+    ReaderTheme(
+      themeIndex: 7,
+      name: '薄荷',
+      backgroundColor: Color(0xFFE8F5E9),
+      textColor: Color(0xFF2E7D32),
+      hintColor: Color(0xFF81C784),
+    ),
+    ReaderTheme(
+      themeIndex: 8,
+      name: '星空',
+      backgroundColor: Color(0xFF1A1A2E),
+      textColor: Color(0xFFB8C5D6),
+      hintColor: Color(0xFF5C6B7A),
+    ),
+    ReaderTheme(
+      themeIndex: 9,
+      name: '暖黄',
+      backgroundColor: Color(0xFFFFF8E1),
+      textColor: Color(0xFF5D4037),
+      hintColor: Color(0xFFA1887F),
+    ),
+    ReaderTheme(
+      themeIndex: 10,
+      name: '血红',
+      backgroundColor: Color(0xFF1A0000),
+      textColor: Color(0xFFEF9A9A),
+      hintColor: Color(0xFF8B0000),
+    ),
+    ReaderTheme(
+      themeIndex: 11,
+      name: '蓝眸',
+      backgroundColor: Color(0xFFE3F2FD),
+      textColor: Color(0xFF1565C0),
+      hintColor: Color(0xFF64B5F6),
+    ),
   ];
 
   /// 根据索引获取主题

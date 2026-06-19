@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
 import '../../../providers.dart';
 import '../../../domain/models/book_source.dart';
 import '../../../domain/models/chapter.dart';
@@ -28,6 +29,13 @@ class ReaderPage extends ConsumerStatefulWidget {
 class _ReaderPageState extends ConsumerState<ReaderPage> {
   bool _showSettings = false;
   bool _showToc = false;
+  bool _showMenu = false;
+  bool _isLongPress = false;
+  Offset? _longPressPosition;
+  String? _selectedText;
+  int _autoHideTimer = 0;
+  Timer? _hideTimer;
+  PageController? _pageController;
 
   @override
   void initState() {
@@ -35,6 +43,31 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(readerProvider.notifier).loadBook(widget.bookId);
     });
+    _startAutoHideTimer();
+  }
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel();
+    _pageController?.dispose();
+    super.dispose();
+  }
+
+  void _startAutoHideTimer() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _autoHideTimer++;
+      if (_autoHideTimer >= 5 && _showMenu) {
+        setState(() {
+          _showMenu = false;
+        });
+        _autoHideTimer = 0;
+      }
+    });
+  }
+
+  void _resetAutoHideTimer() {
+    _autoHideTimer = 0;
   }
 
   void _toggleSettings() {
@@ -45,13 +78,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     setState(() => _showToc = !_showToc);
   }
 
-  void _onThemeChanged(ReaderTheme theme) {
-    ref.read(readerProvider.notifier).setTheme(theme);
-    setState(() => _showSettings = false);
-  }
-
-  void _onConfigChanged(LayoutConfig config) {
-    ref.read(readerProvider.notifier).updateLayoutConfig(config);
+  void _toggleMenu() {
+    setState(() {
+      _showMenu = !_showMenu;
+      _autoHideTimer = 0;
+    });
   }
 
   void _onChapterSelected(int index) {
@@ -61,8 +92,32 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
   /// 处理点击事件
   void _handleTap(TapDownDetails details) {
+    _resetAutoHideTimer();
     final screenWidth = MediaQuery.of(context).size.width;
     final tapX = details.localPosition.dx;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final tapY = details.localPosition.dy;
+
+    // 如果显示设置或目录面板，点击外部关闭
+    if (_showSettings || _showToc) {
+      setState(() {
+        _showSettings = false;
+        _showToc = false;
+      });
+      return;
+    }
+
+    // 顶部区域：显示菜单
+    if (tapY < screenHeight * 0.15) {
+      _toggleMenu();
+      return;
+    }
+
+    // 底部区域：显示菜单
+    if (tapY > screenHeight * 0.85) {
+      _toggleMenu();
+      return;
+    }
 
     // 左侧区域：上一页
     if (tapX < screenWidth * 0.3) {
@@ -74,7 +129,40 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     }
     // 中间区域：显示/隐藏菜单
     else {
-      ref.read(readerProvider.notifier).toggleMenu();
+      _toggleMenu();
+    }
+  }
+
+  /// 处理长按事件 - 文本选择
+  void _handleLongPress(LongPressStartDetails details) {
+    _resetAutoHideTimer();
+    setState(() {
+      _isLongPress = true;
+      _longPressPosition = details.localPosition;
+    });
+  }
+
+  /// 处理长按结束
+  void _handleLongPressEnd(LongPressEndDetails details) {
+    setState(() {
+      _isLongPress = false;
+      _longPressPosition = null;
+      _selectedText = null;
+    });
+  }
+
+  /// 处理滑动手势
+  void _handlePanUpdate(DragUpdateDetails details) {
+    _resetAutoHideTimer();
+    const sensitivity = 50;
+    
+    // 水平滑动翻页
+    if (details.delta.dx.abs() > details.delta.dy.abs()) {
+      if (details.delta.dx < -sensitivity) {
+        ref.read(readerProvider.notifier).nextPage();
+      } else if (details.delta.dx > sensitivity) {
+        ref.read(readerProvider.notifier).previousPage();
+      }
     }
   }
 
@@ -92,6 +180,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             // 阅读内容区域
             GestureDetector(
               onTapDown: (details) => _handleTap(details),
+              onLongPressStart: (details) => _handleLongPress(details),
+              onLongPressEnd: (details) => _handleLongPressEnd(details),
+              onPanUpdate: (details) => _handlePanUpdate(details),
+              behavior: HitTestBehavior.opaque,
               child: state.isLoading
                   ? Center(
                       child: CircularProgressIndicator(
@@ -111,6 +203,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                         ),
             ),
 
+            // 长按菜单
+            if (_isLongPress && _longPressPosition != null)
+              Positioned(
+                left: _longPressPosition!.dx,
+                top: _longPressPosition!.dy - 100,
+                child: _buildLongPressMenu(),
+              ),
             // 阅读菜单
             if (state.showMenu)
               ReaderMenu(
@@ -258,6 +357,65 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         ),
       ),
     );
+  }
+
+  /// 构建长按菜单
+  Widget _buildLongPressMenu() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          _buildActionButton(Icons.copy, '复制', () => _copyText()),
+          _buildActionButton(Icons.share, '分享', () => _shareText()),
+          _buildActionButton(Icons.bookmark_add, '收藏', () => _addBookmark()),
+          _buildActionButton(Icons.translate, '翻译', () => _translateText()),
+        ],
+      ),
+    );
+  }
+
+  /// 构建操作按钮
+  Widget _buildActionButton(IconData icon, String label, VoidCallback onPressed) {
+    return TextButton(
+      onPressed: onPressed,
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.grey[700], size: 20),
+          Text(label, style: TextStyle(color: Colors.grey[700], fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
+  /// 复制文本
+  void _copyText() {
+    setState(() => _isLongPress = false);
+  }
+
+  /// 分享文本
+  void _shareText() {
+    setState(() => _isLongPress = false);
+  }
+
+  /// 添加书签
+  void _addBookmark() {
+    setState(() => _isLongPress = false);
+  }
+
+  /// 翻译文本
+  void _translateText() {
+    setState(() => _isLongPress = false);
   }
 
   /// 显示书源切换弹窗

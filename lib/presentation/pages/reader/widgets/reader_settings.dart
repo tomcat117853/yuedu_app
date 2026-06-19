@@ -15,6 +15,9 @@ class ReaderSettings extends StatelessWidget {
   final void Function(double value)? onMarginChanged;
   final void Function(double value)? onLetterSpacingChanged;
   final void Function(ReaderTheme readerTheme)? onThemeChanged;
+  final void Function(PageTransition)? onPageTransitionChanged;
+  final void Function(String)? onFontFamilyChanged;
+  final void Function(int)? onReadModeChanged;
 
   const ReaderSettings({
     super.key,
@@ -28,6 +31,9 @@ class ReaderSettings extends StatelessWidget {
     this.onMarginChanged,
     this.onLetterSpacingChanged,
     this.onThemeChanged,
+    this.onPageTransitionChanged,
+    this.onFontFamilyChanged,
+    this.onReadModeChanged,
   });
 
   @override
@@ -114,7 +120,7 @@ class ReaderSettings extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 主题选择
+            // 主题选择 - 基础主题
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
@@ -127,7 +133,7 @@ class ReaderSettings extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  ...ReaderTheme.presets.map((preset) {
+                  ...ReaderTheme.presets.take(4).map((preset) {
                     final isSelected = preset.themeIndex == theme.themeIndex;
                     return GestureDetector(
                       onTap: () {
@@ -137,8 +143,8 @@ class ReaderSettings extends StatelessWidget {
                       },
                       child: Container(
                         margin: const EdgeInsets.only(left: 12),
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: preset.backgroundColor,
                           borderRadius: BorderRadius.circular(8),
@@ -146,15 +152,44 @@ class ReaderSettings extends StatelessWidget {
                               ? Border.all(color: Colors.white, width: 2)
                               : Border.all(color: Colors.white24, width: 1),
                         ),
-                        child: Center(
-                          child: Text(
-                            preset.name,
-                            style: TextStyle(
-                              color: preset.textColor,
-                              fontSize: 10,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+
+            // 主题选择 - 扩展主题
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    '更多',
+                    style: TextStyle(
+                      color: theme.hintColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const Spacer(),
+                  ...ReaderTheme.extendedPresets.take(6).map((preset) {
+                    final isSelected = preset.themeIndex == theme.themeIndex;
+                    return GestureDetector(
+                      onTap: () {
+                        if (onThemeChanged != null) {
+                          onThemeChanged!(preset);
+                        }
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 10),
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: preset.backgroundColor,
+                          borderRadius: BorderRadius.circular(6),
+                          border: isSelected
+                              ? Border.all(color: Colors.white, width: 2)
+                              : Border.all(color: Colors.white24, width: 1),
                         ),
                       ),
                     );
@@ -204,6 +239,33 @@ class ReaderSettings extends StatelessWidget {
                 displayValue: layoutConfig.letterSpacingValue.toStringAsFixed(1),
                 onChanged: onLetterSpacingChanged!,
               ),
+
+            const SizedBox(height: 16),
+
+            // 字体选择
+            _buildSettingRow(
+              label: '字体',
+              child: _buildFontSelector(),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 阅读模式
+            _buildSettingRow(
+              label: '模式',
+              child: _buildReadModeSelector(),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 翻页效果
+            if (onPageTransitionChanged != null)
+              _buildSettingRow(
+                label: '翻页',
+                child: _buildPageTransitionSelector(),
+              ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -294,6 +356,143 @@ class ReaderSettings extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// 字体选择器
+  Widget _buildFontSelector() {
+    return PopupMenuButton<String>(
+      initialValue: layoutConfig.fontFamily,
+      onSelected: (value) {
+        onFontFamilyChanged?.call(value);
+      },
+      itemBuilder: (context) {
+        return BuiltInFonts.options.map((font) {
+          return PopupMenuItem<String>(
+            value: font.fontFamily,
+            child: Text(
+              font.displayName,
+              style: TextStyle(
+                fontFamily: font.fontFamily == 'system' ? null : font.fontFamily,
+              ),
+            ),
+          );
+        }).toList();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.hintColor),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              BuiltInFonts.getDisplayName(layoutConfig.fontFamily),
+              style: TextStyle(color: theme.textColor, fontSize: 14),
+            ),
+            Icon(Icons.arrow_drop_down, color: theme.textColor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 阅读模式选择器
+  Widget _buildReadModeSelector() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildModeButton(
+          icon: Icons.menu_book,
+          label: '翻页',
+          isSelected: layoutConfig.readMode == 0,
+          onTap: () => onReadModeChanged?.call(0),
+        ),
+        const SizedBox(width: 8),
+        _buildModeButton(
+          icon: Icons.swap_vert,
+          label: '滚动',
+          isSelected: layoutConfig.readMode == 1,
+          onTap: () => onReadModeChanged?.call(1),
+        ),
+      ],
+    );
+  }
+
+  /// 模式按钮
+  Widget _buildModeButton({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.textColor.withOpacity(0.2) : Colors.transparent,
+          border: Border.all(
+            color: isSelected ? theme.textColor : theme.hintColor,
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: isSelected ? theme.textColor : theme.hintColor),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? theme.textColor : theme.hintColor,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 翻页效果选择器
+  Widget _buildPageTransitionSelector() {
+    final transitions = [
+      (PageTransition.none, '无'),
+      (PageTransition.simulation, '仿真'),
+      (PageTransition.slide, '滑动'),
+      (PageTransition.fade, '淡入'),
+      (PageTransition.curl, '卷曲'),
+    ];
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: transitions.map((t) {
+        final isSelected = layoutConfig.pageTransition == t.$1;
+        return GestureDetector(
+          onTap: () => onPageTransitionChanged?.call(t.$1),
+          child: Container(
+            margin: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: isSelected ? theme.textColor.withOpacity(0.2) : Colors.transparent,
+              border: Border.all(
+                color: isSelected ? theme.textColor : theme.hintColor,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              t.$2,
+              style: TextStyle(
+                color: isSelected ? theme.textColor : theme.hintColor,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
