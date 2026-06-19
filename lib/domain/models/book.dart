@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 /// 书籍模型
 class Book {
   final String id;
@@ -39,7 +37,6 @@ class Book {
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
-  /// 从JSON创建
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
       id: json['id'] as String,
@@ -65,7 +62,6 @@ class Book {
     );
   }
 
-  /// 转换为JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -87,7 +83,6 @@ class Book {
     };
   }
 
-  /// 创建副本
   Book copyWith({
     String? id,
     String? title,
