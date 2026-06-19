@@ -54,7 +54,7 @@ class ReaderMenu extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.7),
+                Colors.black.withOpacity(0.7),
                 Colors.transparent,
               ],
             ),
@@ -119,7 +119,7 @@ class ReaderMenu extends StatelessWidget {
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.7),
+                Colors.black.withOpacity(0.7),
                 Colors.transparent,
               ],
             ),

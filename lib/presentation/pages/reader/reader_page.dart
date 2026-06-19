@@ -73,7 +73,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               child: state.isLoading
                   ? Center(
                       child: CircularProgressIndicator(
-                        color: state.readerTheme.textColor.withValues(alpha: 0.5),
+                        color: state.readerTheme.textColor.withOpacity(0.5),
                       ),
                     )
                   : state.readMode == 0

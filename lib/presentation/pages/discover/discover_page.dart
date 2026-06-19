@@ -56,8 +56,18 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('发现'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: '推荐'),
+            Tab(text: '排行'),
+            Tab(text: '分类'),
+            Tab(text: '搜索'),
+          ],
+        ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
           _buildRecommendTab(),
           _buildRankTab(),
@@ -178,61 +188,53 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
   Widget _buildSearchTab() {
     final state = ref.watch(discoverProvider);
 
-    return Padding(
+    return ListView(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: '搜索书名或作者',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        ref.read(discoverProvider.notifier).clearSearch();
-                        setState(() {});
-                      },
-                    )
-                  : null,
-            ),
-            onChanged: (_) => setState(() {}),
-            onSubmitted: _executeSearch,
+      children: [
+        TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: '搜索书名或作者',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      ref.read(discoverProvider.notifier).clearSearch();
+                      setState(() {});
+                    },
+                  )
+                : null,
           ),
-          if (state.isSearching)
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (state.searchResults.isNotEmpty)
-            Expanded(child: _buildSearchResults(state))
-          else if (state.error != null)
-            Expanded(
-              child: Center(
-                child: Text(state.error!,
-                    style: const TextStyle(color: Colors.red)),
-              ),
-            )
-          else ...[
-            const SizedBox(height: 24),
-            _buildSectionHeader('热门搜索'),
-            const SizedBox(height: 12),
-            _buildHotSearchTags(),
-          ],
+          onChanged: (_) => setState(() {}),
+          onSubmitted: _executeSearch,
+        ),
+        const SizedBox(height: 16),
+        if (state.isSearching)
+          const Center(child: CircularProgressIndicator())
+        else if (state.searchResults.isNotEmpty)
+          _buildSearchResults(state)
+        else if (state.error != null)
+          Center(
+            child: Text(state.error!,
+                style: const TextStyle(color: Colors.red)),
+          )
+        else ...[
+          _buildSectionHeader('热门搜索'),
+          const SizedBox(height: 12),
+          _buildHotSearchTags(),
         ],
-      ),
+      ],
     );
   }
 
   /// 搜索结果列表
   Widget _buildSearchResults(DiscoverState state) {
-    return ListView.builder(
-      itemCount: state.searchResults.length,
-      itemBuilder: (context, index) {
-        final result = state.searchResults[index];
-        return _buildBookListItem(result);
-      },
+    return Column(
+      children: state.searchResults
+          .map((result) => _buildBookListItem(result))
+          .toList(),
     );
   }
 

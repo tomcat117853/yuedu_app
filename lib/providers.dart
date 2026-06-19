@@ -8,6 +8,7 @@ import 'domain/engine/source_engine.dart';
 import 'domain/engine/source_matcher.dart';
 import 'domain/models/source_definition.dart';
 import 'domain/services/book_service.dart';
+import 'domain/services/backup_service.dart';
 import 'domain/services/chapter_cache_service.dart';
 import 'domain/services/source_importer.dart';
 import 'domain/services/source_service.dart';
@@ -39,6 +40,16 @@ final sourceRepositoryProvider = Provider<SourceRepository>((ref) {
 final bookServiceProvider = Provider<BookService>((ref) {
   final repo = ref.watch(bookRepositoryProvider);
   return BookService(repo);
+});
+
+/// 备份服务 Provider
+final backupServiceProvider = Provider<BackupService>((ref) {
+  final bookRepo = ref.watch(bookRepositoryProvider);
+  final sourceRepo = ref.watch(sourceRepositoryProvider);
+  return BackupService(
+    bookRepository: bookRepo,
+    sourceRepository: sourceRepo,
+  );
 });
 
 /// 反爬虫管理器 Provider

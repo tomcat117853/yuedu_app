@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/models/book.dart';
 import '../../../domain/models/chapter.dart';
 import '../../../domain/models/layout_config.dart';
-import '../../../domain/models/read_progress.dart';
+import '../../../domain/models/reader_state.dart';
 import '../../../domain/models/reader_theme.dart';
 import '../../../domain/services/read_engine.dart';
 
@@ -17,103 +18,100 @@ class ReaderProvider extends Notifier<ReaderState> {
   ReaderState build() {
     _readEngine = ref.read(readEngineProvider);
     return ReaderState(
-      chapters: [],
-      currentChapterIndex: 0,
-      currentPage: 0,
-      totalPages: 0,
-      currentPageText: '',
       layoutConfig: LayoutConfig.defaultConfig(),
-      theme: ReaderTheme.day(),
-      isLoading: false,
+      readerTheme: ReaderTheme.day(),
     );
   }
 
+  /// 加载书籍
   Future<void> loadBook(String bookId) async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, error: null);
     try {
       final chapters = await _readEngine.loadBook(bookId);
+      
       if (chapters.isEmpty) {
         state = state.copyWith(
-          chapters: [],
-          currentChapterIndex: 0,
-          currentPage: 0,
-          totalPages: 0,
-          currentPageText: '',
           isLoading: false,
         );
         return;
       }
 
-      await _readEngine.loadChapter(chapters[0].id);
+      await _readEngine.loadChapter(0);
       await _readEngine.updateLayoutConfig(state.layoutConfig);
 
-      final totalPages = _readEngine.getTotalPages();
-      final pageText = _readEngine.getPageText(0);
+      final totalPages = _readEngine.totalPages;
+      final pageText = _readEngine.getCurrentPageText();
 
       state = state.copyWith(
-        chapters: chapters,
         currentChapterIndex: 0,
-        currentPage: 0,
+        currentPageIndex: 0,
         totalPages: totalPages,
         currentPageText: pageText,
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false);
-      rethrow;
+      state = state.copyWith(
+        isLoading: false,
+        error: '加载书籍失败: $e',
+      );
     }
   }
 
-  Future<void> setTheme(ReaderTheme theme) async {
-    state = state.copyWith(theme: theme);
-  }
-
-  Future<void> updateLayoutConfig(LayoutConfig config) async {
-    await _readEngine.updateLayoutConfig(config);
-    final totalPages = _readEngine.getTotalPages();
-    final currentPage = _readEngine.getCurrentPage();
-    final pageText = _readEngine.getPageText(currentPage);
-
-    state = state.copyWith(
-      isLoading: true,
-      currentChapterIndex: chapterIndex,
-      currentPageIndex: 0,
-    );
-
+  /// 加载指定章节
+  Future<void> loadChapter(int chapterIndex) async {
+    if (chapterIndex < 0 || chapterIndex >= state.chapters.length) return;
+    
+    state = state.copyWith(isLoading: true);
     try {
-      // 通过阅读引擎加载章节并执行分页
       await _readEngine.loadChapter(chapterIndex);
-
-      // 获取分页后的页面文本
+      
+      final totalPages = _readEngine.totalPages;
       final pageText = _readEngine.getCurrentPageText();
 
       state = state.copyWith(
-        isLoading: false,
-        currentPageText: pageText,
-        totalPages: _readEngine.totalPages,
+        currentChapterIndex: chapterIndex,
         currentPageIndex: 0,
+        totalPages: totalPages,
+        currentPageText: pageText,
+        isLoading: false,
       );
     } catch (e) {
-      debugPrint('加载章节失败: $e');
       state = state.copyWith(
         isLoading: false,
-        currentPageText: '章节加载失败',
+        error: '加载章节失败: $e',
       );
     }
+  }
+
+  /// 设置主题
+  void setTheme(ReaderTheme theme) {
+    state = state.copyWith(readerTheme: theme);
+  }
+
+  /// 更新排版配置
+  Future<void> updateLayoutConfig(LayoutConfig config) async {
+    state = state.copyWith(layoutConfig: config);
+    await _readEngine.updateLayoutConfig(config);
+    
+    final totalPages = _readEngine.totalPages;
+    final pageText = _readEngine.getCurrentPageText();
+    
+    state = state.copyWith(
+      totalPages: totalPages,
+      currentPageText: pageText,
+    );
   }
 
   /// 翻到下一页
   void nextPage() {
     final moved = _readEngine.nextPage();
     if (moved) {
-      // 阅读引擎成功翻页，更新 UI 状态
       final pageText = _readEngine.getCurrentPageText();
       state = state.copyWith(
         currentPageIndex: _readEngine.currentPage - 1,
         currentPageText: pageText,
       );
     } else {
-      // 已到本章末尾，翻到下一章
       nextChapter();
     }
   }
@@ -122,14 +120,12 @@ class ReaderProvider extends Notifier<ReaderState> {
   void previousPage() {
     final moved = _readEngine.previousPage();
     if (moved) {
-      // 阅读引擎成功翻页，更新 UI 状态
       final pageText = _readEngine.getCurrentPageText();
       state = state.copyWith(
         currentPageIndex: _readEngine.currentPage - 1,
         currentPageText: pageText,
       );
     } else {
-      // 已到本章开头，翻到上一章
       previousChapter();
     }
   }
@@ -179,22 +175,8 @@ class ReaderProvider extends Notifier<ReaderState> {
 
   /// 切换主题
   void cycleTheme() {
-    final nextIndex =
-        (state.readerTheme.themeIndex + 1) % ReaderTheme.presets.length;
+    final nextIndex = (state.theme.themeIndex + 1) % ReaderTheme.presets.length;
     state = state.copyWith(readerTheme: ReaderTheme.presets[nextIndex]);
-  }
-
-  /// 更新排版配置
-  void updateLayoutConfig(LayoutConfig config) async {
-    state = state.copyWith(layoutConfig: config);
-    // 通过阅读引擎更新排版并重新分页
-    await _readEngine.updateLayoutConfig(config);
-    // 分页完成后更新 UI
-    final pageText = _readEngine.getCurrentPageText();
-    state = state.copyWith(
-      totalPages: _readEngine.totalPages,
-      currentPageText: pageText,
-    );
   }
 
   /// 增大字体
@@ -225,6 +207,22 @@ class ReaderProvider extends Notifier<ReaderState> {
   void decreaseLineHeight() {
     final newConfig = state.layoutConfig.copyWith(
       lineHeight: (state.layoutConfig.lineHeight - 0.1).clamp(1.0, 3.0),
+    );
+    updateLayoutConfig(newConfig);
+  }
+
+  /// 增大段距
+  void increaseParagraphSpacing() {
+    final newConfig = state.layoutConfig.copyWith(
+      paragraphSpacing: (state.layoutConfig.paragraphSpacing + 0.1).clamp(0.0, 2.0),
+    );
+    updateLayoutConfig(newConfig);
+  }
+
+  /// 减小段距
+  void decreaseParagraphSpacing() {
+    final newConfig = state.layoutConfig.copyWith(
+      paragraphSpacing: (state.layoutConfig.paragraphSpacing - 0.1).clamp(0.0, 2.0),
     );
     updateLayoutConfig(newConfig);
   }

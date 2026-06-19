@@ -115,7 +115,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)],
+          colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -128,7 +128,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
             ),
             child: const Icon(Icons.person, size: 32, color: Colors.white),
           ),
@@ -149,7 +149,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 Text(
                   '阅读是一种生活方式',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withOpacity(0.8),
                     fontSize: 14,
                   ),
                 ),
