@@ -1,0 +1,68 @@
+name: yuedu_app
+description: 全平台本地阅读应用
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 状态管理
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # 路由
+  go_router: ^14.2.0
+
+  # 数据库
+  drift: ^2.22.1
+  sqlite3: ^2.4.6
+  sqlite3_flutter_libs: ^0.5.28
+  path_provider: ^2.1.5
+  path: ^1.9.0
+
+  # 网络
+  dio: ^5.7.0
+  cached_network_image: ^3.4.1
+
+  # 解析
+  html: ^0.15.5
+  epubx: ^4.0.0
+
+  # 本地存储
+  shared_preferences: ^2.3.4
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # 工具
+  logger: ^2.5.0
+  uuid: ^4.5.1
+  crypto: ^3.0.3
+
+  # 文件选择
+  file_picker: ^8.1.2
+
+  # 代码生成注解
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # UI
+  flutter_svg: ^2.0.10+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+  # 代码生成工具
+  build_runner: ^2.4.13
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+  drift_dev: ^2.22.1
+  riverpod_generator: ^2.4.0
+
+flutter:
+  uses-material-design: true
