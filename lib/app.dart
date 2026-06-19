@@ -1,98 +1,102 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'config/constants.dart';
+
 import 'config/routes.dart';
 import 'config/theme.dart';
-import 'providers.dart';
+import 'presentation/pages/bookshelf/bookshelf_page.dart';
+import 'presentation/pages/discover/discover_page.dart';
+import 'presentation/pages/profile/profile_page.dart';
+import 'presentation/pages/reader/reader_page.dart';
+import 'presentation/pages/source/source_page.dart';
+import 'presentation/pages/settings/settings_page.dart';
+import 'presentation/pages/profile/backup_page.dart';
 
-/// 主题模式 Provider
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
-  return ThemeModeNotifier(ref);
-});
-
-/// 主题模式管理
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  final Ref _ref;
-
-  ThemeModeNotifier(this._ref) : super(ThemeMode.system) {
-    _loadThemeMode();
-  }
-
-  Future<void> _loadThemeMode() async {
-    try {
-      final prefs = _ref.read(sharedPreferencesProvider);
-      final modeStr = prefs.getString(AppConstants.keyThemeMode) ?? 'system';
-      switch (modeStr) {
-        case 'light':
-          state = ThemeMode.light;
-          break;
-        case 'dark':
-          state = ThemeMode.dark;
-          break;
-        default:
-          state = ThemeMode.system;
-      }
-    } catch (_) {
-      state = ThemeMode.system;
-    }
-  }
-
-  Future<void> setThemeMode(ThemeMode mode) async {
-    state = mode;
-    try {
-      final prefs = _ref.read(sharedPreferencesProvider);
-      String modeStr;
-      switch (mode) {
-        case ThemeMode.light:
-          modeStr = 'light';
-          break;
-        case ThemeMode.dark:
-          modeStr = 'dark';
-          break;
-        default:
-          modeStr = 'system';
-      }
-      await prefs.setString(AppConstants.keyThemeMode, modeStr);
-    } catch (_) {}
-  }
-}
-
-/// 阅读App根组件
-class YueDuApp extends ConsumerStatefulWidget {
-  const YueDuApp({super.key});
+class YueduApp extends ConsumerStatefulWidget {
+  const YueduApp({super.key});
 
   @override
-  ConsumerState<YueDuApp> createState() => _YueDuAppState();
+  ConsumerState<YueduApp> createState() => _YueduAppState();
 }
 
-class _YueDuAppState extends ConsumerState<YueDuApp> {
-  late final GoRouter _router;
+class _YueduAppState extends ConsumerState<YueduApp> {
+  int _currentIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _router = createRouter();
+  final List<Widget> _pages = [
+    const BookshelfPage(),
+    const DiscoverPage(),
+    const SourcePage(),
+    const ProfilePage(),
+  ];
+
+  final List<String> _pageTitles = [
+    '书架',
+    '发现',
+    '书源',
+    '我的',
+  ];
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = ref.watch(themeModeProvider);
-
-    return MaterialApp.router(
-      title: '阅读',
-      debugShowCheckedModeBanner: false,
+    return MaterialApp(
+      title: 'Yuedu App',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      routerConfig: _router,
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-          child: child ?? const SizedBox.shrink(),
-        );
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text(_pageTitles[_currentIndex]),
+        ),
+        body: _pages[_currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: '书架',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: '发现',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.book_open),
+              label: '书源',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: '我的',
+            ),
+          ],
+        ),
+      ),
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case Routes.reader:
+            final bookId = settings.arguments as String;
+            return MaterialPageRoute(
+              builder: (context) => ReaderPage(bookId: bookId),
+            );
+          case Routes.backup:
+            return MaterialPageRoute(
+              builder: (context) => const BackupPage(),
+            );
+          case Routes.settings:
+            return MaterialPageRoute(
+              builder: (context) => const SettingsPage(),
+            );
+          case Routes.source:
+            return MaterialPageRoute(
+              builder: (context) => const SourcePage(),
+            );
+          default:
+            return null;
+        }
       },
     );
   }
