@@ -1,146 +1,209 @@
 import 'package:flutter/material.dart';
+
 import '../../../../domain/models/layout_config.dart';
 import '../../../../domain/models/reader_theme.dart';
 
-/// 阅读器设置面板
 class ReaderSettings extends StatelessWidget {
+  final LayoutConfig config;
   final ReaderTheme theme;
-  final LayoutConfig layoutConfig;
-  final VoidCallback onIncreaseFontSize;
-  final VoidCallback onDecreaseFontSize;
-  final VoidCallback onIncreaseLineHeight;
-  final VoidCallback onDecreaseLineHeight;
+  final Function(LayoutConfig) onConfigChanged;
+  final Function(ReaderTheme) onThemeChanged;
 
   const ReaderSettings({
     super.key,
+    required this.config,
     required this.theme,
-    required this.layoutConfig,
-    required this.onIncreaseFontSize,
-    required this.onDecreaseFontSize,
-    required this.onIncreaseLineHeight,
-    required this.onDecreaseLineHeight,
+    required this.onConfigChanged,
+    required this.onThemeChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2C),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Material(
+      color: theme.backgroundColor,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
           children: [
-            const SizedBox(height: 16),
-
-            // 字体大小
-            _buildSettingRow(
-              label: '字体大小',
-              child: Row(
-                children: [
-                  _buildCircleButton(
-                    icon: Icons.remove,
-                    onTap: onDecreaseFontSize,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      '${layoutConfig.fontSize.toInt()}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  _buildCircleButton(
-                    icon: Icons.add,
-                    onTap: onIncreaseFontSize,
-                  ),
-                ],
-              ),
+            const Text(
+              '主题设置',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 12),
-
-            // 行距
-            _buildSettingRow(
-              label: '行距',
-              child: Row(
-                children: [
-                  _buildCircleButton(
-                    icon: Icons.remove,
-                    onTap: onDecreaseLineHeight,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      layoutConfig.lineHeight.toStringAsFixed(1),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  _buildCircleButton(
-                    icon: Icons.add,
-                    onTap: onIncreaseLineHeight,
-                  ),
-                ],
-              ),
+            Row(
+              children: [
+                _buildThemeButton(ReaderTheme.day(), '日间'),
+                const SizedBox(width: 8),
+                _buildThemeButton(ReaderTheme.night(), '夜间'),
+                const SizedBox(width: 8),
+                _buildThemeButton(ReaderTheme.eyeCare(), '护眼'),
+                const SizedBox(width: 8),
+                _buildThemeButton(ReaderTheme.inkScreen(), '墨水屏'),
+              ],
             ),
-
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
+            const Text(
+              '字体大小',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: () => _updateFontSize(config.fontSize - 2),
+                ),
+                Expanded(
+                  child: Slider(
+                    value: config.fontSize.toDouble(),
+                    min: 12,
+                    max: 36,
+                    onChanged: (value) => _updateFontSize(value.toInt()),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () => _updateFontSize(config.fontSize + 2),
+                ),
+                const SizedBox(width: 8),
+                Text('${config.fontSize}px'),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              '行距',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: () => _updateLineHeight(config.lineHeight - 0.1),
+                ),
+                Expanded(
+                  child: Slider(
+                    value: config.lineHeight,
+                    min: 1.2,
+                    max: 2.5,
+                    onChanged: _updateLineHeight,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('${config.lineHeight.toStringAsFixed(1)}'),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              '段距',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: config.paragraphSpacing.toDouble(),
+                    min: 0,
+                    max: 30,
+                    onChanged: (value) => _updateParagraphSpacing(value.toInt()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('${config.paragraphSpacing}px'),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              '页边距',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: config.pagePadding.toDouble(),
+                    min: 10,
+                    max: 60,
+                    onChanged: (value) => _updatePagePadding(value.toInt()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('${config.pagePadding}px'),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              '字间距',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: config.letterSpacing,
+                    min: 0,
+                    max: 5,
+                    onChanged: _updateLetterSpacing,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('${config.letterSpacing.toStringAsFixed(1)}px'),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  /// 构建设置行
-  Widget _buildSettingRow({required String label, required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
+  Widget _buildThemeButton(ReaderTheme themeOption, String label) {
+    final isSelected = theme.backgroundColor == themeOption.backgroundColor &&
+        theme.textColor == themeOption.textColor;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onThemeChanged(themeOption),
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: themeOption.backgroundColor,
+            border: isSelected
+                ? Border.all(color: Colors.white, width: 2)
+                : Border.all(color: Colors.transparent),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(color: themeOption.textColor),
             ),
           ),
-          const Spacer(),
-          child,
-        ],
+        ),
       ),
     );
   }
 
-  /// 构建圆形按钮
-  Widget _buildCircleButton({required IconData icon, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white54),
-        ),
-        child: Icon(icon, color: Colors.white, size: 18),
-      ),
-    );
+  void _updateFontSize(int size) {
+    if (size >= 12 && size <= 36) {
+      onConfigChanged(config.copyWith(fontSize: size));
+    }
+  }
+
+  void _updateLineHeight(double height) {
+    onConfigChanged(config.copyWith(lineHeight: height));
+  }
+
+  void _updateParagraphSpacing(int spacing) {
+    onConfigChanged(config.copyWith(paragraphSpacing: spacing));
+  }
+
+  void _updatePagePadding(int padding) {
+    onConfigChanged(config.copyWith(pagePadding: padding));
+  }
+
+  void _updateLetterSpacing(double spacing) {
+    onConfigChanged(config.copyWith(letterSpacing: spacing));
   }
 }
