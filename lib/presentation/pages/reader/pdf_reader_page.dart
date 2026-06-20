@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../config/theme.dart';
+import '../../../config/design_tokens.dart';
 import '../../../data/parsers/pdf_parser.dart';
 
 /// PDF 阅读页面
@@ -112,26 +112,26 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
         // PDF 页面占位区域
         Expanded(
           child: Container(
-            color: AppTheme.surfaceColor,
+            color: Theme.of(context).colorScheme.surface,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.picture_as_pdf, size: 80, color: AppTheme.primaryColor),
+                  Icon(Icons.picture_as_pdf, size: 80, color: AppColors.systemBlue),
                   const SizedBox(height: 16),
                   Text(
                     '第 ${_currentPage + 1} 页',
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'PDF 渲染需要集成 PDF 查看器库',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    style: TextStyle(color: AppColors.gray6, fontSize: 13),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     '请在 pubspec.yaml 中添加 syncfusion_flutter_pdfviewer',
-                    style: TextStyle(color: AppTheme.textHint, fontSize: 12),
+                    style: TextStyle(color: AppColors.gray5, fontSize: 12),
                   ),
                 ],
               ),
@@ -143,7 +143,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceColor,
+            color: Theme.of(context).colorScheme.surface,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),

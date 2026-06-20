@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../config/design_tokens.dart';
-import '../../../config/theme.dart';
-import '../../../domain/models/source_definition.dart';
 import '../../../providers.dart';
-import '../../widgets/common_widgets.dart';
 import 'discover_provider.dart';
 import 'book_detail_page.dart';
 
@@ -66,9 +62,6 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
             Tab(text: '分类'),
             Tab(text: '搜索'),
           ],
-          labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primaryColor,
         ),
       ),
       body: TabBarView(
@@ -93,15 +86,16 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
     }
 
     if (recommendations.isEmpty) {
+      final colorScheme = Theme.of(context).colorScheme;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.explore_outlined,
-                size: 80, color: AppTheme.textHint),
+            Icon(Icons.explore_outlined,
+                size: 80, color: colorScheme.onSurfaceVariant),
             const SizedBox(height: 16),
-            const Text('暂无推荐，请先添加书源',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            Text('暂无推荐，请先添加书源',
+                style: TextStyle(color: colorScheme.onSurfaceVariant)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -117,11 +111,11 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildSectionTitle('热门推荐'),
+        _buildSectionHeader('热门推荐'),
         const SizedBox(height: 12),
         _buildRecommendCards(recommendations.take(10).toList()),
         const SizedBox(height: 24),
-        _buildSectionTitle('最近更新'),
+        _buildSectionHeader('最近更新'),
         const SizedBox(height: 12),
         _buildUpdateList(recommendations.skip(5).take(10).toList()),
       ],
@@ -132,6 +126,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
   Widget _buildRankTab() {
     final state = ref.watch(discoverProvider);
     final recommendations = state.recommendations;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -139,11 +134,11 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
         _buildSectionHeader('热度榜'),
         const SizedBox(height: 12),
         if (recommendations.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
+              padding: const EdgeInsets.all(32),
               child: Text('暂无数据，请先添加书源',
-                  style: TextStyle(color: AppTheme.textSecondary)),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant)),
             ),
           )
         else
@@ -290,6 +285,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
 
   /// 构建推荐卡片
   Widget _buildRecommendCards(List<dynamic> items) {
+    final dividerColor = Theme.of(context).dividerColor;
     return SizedBox(
       height: 180,
       child: items.isEmpty
@@ -299,7 +295,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
-                final title = item is Map ? item['title'] as String? ?? '' : (item.title ?? '');
+                final title = item is Map ? (item['title'] as String? ?? '') : (item.title as String? ?? '');
                 final coverUrl = item is Map
                     ? item['coverUrl'] as String?
                     : (item.coverUrl as String?);
@@ -318,12 +314,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   errorWidget: (_, __, ___) => Container(
-                                    color: AppTheme.dividerColor,
+                                    color: dividerColor,
                                     child: const Icon(Icons.book, size: 40),
                                   ),
                                 )
                               : Container(
-                                  color: AppTheme.dividerColor,
+                                  color: dividerColor,
                                   child: const Center(
                                     child: Icon(Icons.book, size: 40),
                                   ),
@@ -332,7 +328,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        headline6,
+                        title,
                         style: const TextStyle(fontSize: 13),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -362,12 +358,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
       separatorBuilder: (_, __) => const Divider(),
       itemBuilder: (context, index) {
         final item = items[index];
-        final title = item is Map ? item['title'] as String? ?? '' : (item.title ?? '');
-        final author = item is Map ? item['author'] as String? ?? '' : (item.author ?? '');
+        final title = item is Map ? (item['title'] as String? ?? '') : (item.title as String? ?? '');
+        final author = item is Map ? (item['author'] as String? ?? '') : (item.author as String? ?? '');
         return ListTile(
           leading: _buildSmallCover(
               item is Map ? item['coverUrl'] as String? : item.coverUrl as String?),
-          title: Text(headline6),
+          title: Text(title),
           subtitle: Text(author),
         );
       },
@@ -376,6 +372,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
 
   /// 构建排行列表
   Widget _buildRankList(List<dynamic> items) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final dividerColor = Theme.of(context).dividerColor;
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -383,27 +381,27 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
       separatorBuilder: (_, __) => const Divider(),
       itemBuilder: (context, index) {
         final item = items[index];
-        final title = item is Map ? item['title'] as String? ?? '' : (item.title ?? '');
-        final author = item is Map ? item['author'] as String? ?? '' : (item.author ?? '');
+        final title = item is Map ? (item['title'] as String? ?? '') : (item.title as String? ?? '');
+        final author = item is Map ? (item['author'] as String? ?? '') : (item.author as String? ?? '');
         return ListTile(
           leading: Container(
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: index < 3 ? AppTheme.accentColor : AppTheme.dividerColor,
+              color: index < 3 ? colorScheme.secondary : dividerColor,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 '${index + 1}',
                 style: TextStyle(
-                  color: index < 3 ? Colors.white : AppTheme.textSecondary,
+                  color: index < 3 ? Colors.white : colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
-          title: Text(headline6),
+          title: Text(title),
           subtitle: Text(author),
         );
       },
@@ -411,6 +409,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   Widget _buildSmallCover(String? coverUrl) {
+    final dividerColor = Theme.of(context).dividerColor;
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
       child: SizedBox(
@@ -421,12 +420,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage>
                 imageUrl: coverUrl,
                 fit: BoxFit.cover,
                 errorWidget: (_, __, ___) => Container(
-                  color: AppTheme.dividerColor,
+                  color: dividerColor,
                   child: const Icon(Icons.book, size: 24),
                 ),
               )
             : Container(
-                color: AppTheme.dividerColor,
+                color: dividerColor,
                 child: const Icon(Icons.book, size: 24),
               ),
       ),
