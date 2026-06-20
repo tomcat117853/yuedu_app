@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../../providers.dart';
 import '../../../domain/models/book_source.dart';
@@ -211,7 +210,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 child: _buildLongPressMenu(),
               ),
             // 阅读菜单
-            if (state.showMenu)
+            if (_showMenu)
               ReaderMenu(
                 book: state.book,
                 currentChapter: state.currentChapterIndex,
@@ -220,11 +219,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 totalPages: state.totalPages,
                 readerTheme: state.readerTheme,
                 onBack: () {
-                  ref.read(readerProvider.notifier).toggleMenu();
-                  context.pop();
+                  setState(() => _showMenu = false);
+                  Navigator.pop(context);
                 },
                 onToggleMenu: () {
-                  ref.read(readerProvider.notifier).toggleMenu();
+                  _toggleMenu();
                 },
                 onShowSettings: () {},
                 onShowChapterList: () => _showChapterList(state),
@@ -328,12 +327,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 ),
               ),
 
-            // 底部控制栏
-            Positioned(
-              bottom: 20,
-              left: 0,
-              right: 0,
-              child: Row(
+            // 底部控制栏（仅在菜单显示时出现）
+            if (_showMenu)
+              Positioned(
+                bottom: 20,
+                left: 0,
+                right: 0,
+                child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(

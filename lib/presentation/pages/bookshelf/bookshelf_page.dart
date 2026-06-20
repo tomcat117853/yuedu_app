@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import '../../../config/routes.dart';
 import '../../../domain/models/book.dart';
-import '../reader/reader_page.dart';
 import 'bookshelf_provider.dart';
 import 'widgets/book_card.dart';
 import 'widgets/book_list_tile.dart';
@@ -30,12 +29,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   }
 
   void _onBookTap(String bookId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ReaderPage(bookId: bookId),
-      ),
-    );
+    context.push('/reader?bookId=$bookId');
   }
 
   /// iOS-style bottom sheet grabber handle

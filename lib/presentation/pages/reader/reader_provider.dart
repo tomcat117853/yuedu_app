@@ -26,12 +26,19 @@ class ReaderProvider extends Notifier<ReaderState> {
   Future<void> loadBook(String bookId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      // 加载书籍信息和章节列表
+      final bookRepo = ref.read(bookRepositoryProvider);
+      final book = await bookRepo.getBookById(bookId);
+      final chapters = await bookRepo.getChaptersByBookId(bookId);
+
       await _readEngine.initReading(bookId, config: state.layoutConfig);
-      
+
       final totalPages = _readEngine.totalPages;
       final pageText = _readEngine.getCurrentPageText();
 
       state = state.copyWith(
+        book: book,
+        chapters: chapters,
         currentChapterIndex: _readEngine.currentChapterIndex,
         currentPageIndex: 0,
         totalPages: totalPages,

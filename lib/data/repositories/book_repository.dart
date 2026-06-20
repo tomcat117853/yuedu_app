@@ -1,10 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:io';
 import '../../domain/models/book.dart';
 import '../../domain/models/chapter.dart';
 import '../../domain/models/chapter_content.dart';
 import '../../domain/models/read_progress.dart';
 import '../../domain/models/bookmark.dart';
+import '../../data/parsers/txt_parser.dart';
+import '../../data/parsers/epub_parser.dart';
 import '../database/app_database.dart' as db;
 
 const _uuid = Uuid();
@@ -99,11 +102,37 @@ class BookRepository {
 
     // 如果有缓存路径，从文件读取
     String content = '';
-    if (chapter.contentPath != null) {
+    if (chapter.contentPath != null && chapter.contentPath!.isNotEmpty) {
       try {
-        content = '已缓存内容'; // 实际从文件读取
+        final cacheFile = File(chapter.contentPath!);
+        if (await cacheFile.exists()) {
+          content = await cacheFile.readAsString();
+        }
       } catch (_) {
         content = '';
+      }
+    }
+
+    // 如果内容为空，尝试从本地书籍文件读取
+    if (content.isEmpty) {
+      try {
+        final bookEntity = await _db.bookDao.getBookById(bookId);
+        if (bookEntity != null && bookEntity.localPath != null) {
+          final bookFile = File(bookEntity.localPath!);
+          if (await bookFile.exists()) {
+            if (bookEntity.format == 'txt') {
+              content = await TxtParser().getChapterContent(
+                  bookEntity.localPath!, chapterIndex);
+            } else if (bookEntity.format == 'epub') {
+              final parser = EpubParser();
+              final result = await parser.parseFile(bookEntity.localPath!);
+              content = await parser.getChapterPlainText(
+                  result.epubBook, chapterIndex);
+            }
+          }
+        }
+      } catch (_) {
+        // 读取失败，保持空内容
       }
     }
 
