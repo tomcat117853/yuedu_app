@@ -6,7 +6,7 @@ import '../../../domain/models/search_result.dart';
 import '../../../domain/models/source_definition.dart';
 import 'discover_provider.dart';
 
-/// 书籍详情页 - 展示在线书籍的完整信息
+/// 书籍详情页 - Apple App Store style
 class BookDetailPage extends ConsumerStatefulWidget {
   final SearchResult result;
   final SourceDefinition sourceDef;
@@ -27,6 +27,8 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
   bool _isLoading = true;
   bool _isAdding = false;
   String? _error;
+  bool _isDescriptionExpanded = false;
+  bool _isChapterReversed = false;
 
   @override
   void initState() {
@@ -149,12 +151,17 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
     final detail = _detail;
     if (detail == null) return const SizedBox.shrink();
 
+    const systemBlue = Color(0xFF007AFF);
+    const systemIndigo = Color(0xFF5856D6);
+
     return CustomScrollView(
       slivers: [
-        // 头部封面区域
+        // 头部区域 - clean SliverAppBar with cover background
         SliverAppBar(
-          expandedHeight: 280,
+          expandedHeight: 250,
           pinned: true,
+          backgroundColor: colorScheme.surface,
+          elevation: 0,
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               decoration: BoxDecoration(
@@ -162,182 +169,478 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colorScheme.primary.withOpacity(0.8),
-                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.7),
+                    colorScheme.primary.withOpacity(0.9),
                   ],
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // 封面
-                    _buildCover(detail.coverUrl, colorScheme),
-                    const SizedBox(width: 16),
-                    // 书籍信息
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            detail.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // 封面 - 120x160 with borderRadius 12 and shadow
+                      _buildCover(detail.coverUrl, colorScheme),
+                      const SizedBox(width: 16),
+                      // 书籍信息
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              detail.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            detail.author,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 14,
+                            const SizedBox(height: 8),
+                            Text(
+                              detail.author,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 15,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              if (detail.category != null &&
-                                  detail.category!.isNotEmpty)
-                                _buildTag(detail.category!),
-                              if (detail.status != null &&
-                                  detail.status!.isNotEmpty) ...[
-                                const SizedBox(width: 8),
-                                _buildTag(detail.status!),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                if (detail.category != null &&
+                                    detail.category!.isNotEmpty)
+                                  _buildTag(detail.category!, systemIndigo),
+                                if (detail.status != null &&
+                                    detail.status!.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  _buildTag(detail.status!, systemIndigo),
+                                ],
                               ],
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '来源: ${detail.sourceName}',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Action buttons row
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _isAdding ? null : _addToBookshelf,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: systemBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minimumSize: const Size.fromHeight(44),
+                    ),
+                    child: _isAdding
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            '开始阅读',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
-                              fontSize: 12,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.tonal(
+                    onPressed: _isAdding ? null : _addToBookshelf,
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minimumSize: const Size.fromHeight(44),
+                    ),
+                    child: Text(
+                      _isAdding ? '加入中...' : '加入书架',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // 简介
-        if (detail.intro.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '简介',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    detail.intro,
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                      fontSize: 14,
-                      height: 1.6,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-        // 加入书架按钮
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isAdding ? null : _addToBookshelf,
-                icon: _isAdding
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(_isAdding ? '加入中...' : '加入书架'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // 章节列表标题
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '章节目录 (${_chapters.length})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (_chapters.isNotEmpty)
-                  Text(
-                    '最新: ${_chapters.last.title}',
-                    style: TextStyle(
-                      color: colorScheme.outline,
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
               ],
             ),
           ),
         ),
 
-        // 章节列表
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              if (index >= _chapters.length) return null;
-              final chapter = _chapters[index];
-              return ListTile(
-                dense: true,
-                title: Text(
-                  chapter.title,
-                  style: const TextStyle(fontSize: 14),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+        // 简介 - iOS grouped card style
+        if (detail.intro.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                trailing: chapter.isVip
-                    ? Text(
-                        'VIP',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '简介',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    AnimatedCrossFade(
+                      firstChild: Text(
+                        detail.intro,
                         style: TextStyle(
-                          color: colorScheme.secondary,
-                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 15,
+                          height: 1.6,
                         ),
-                      )
-                    : null,
-              );
-            },
-            childCount: _chapters.length,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      secondChild: Text(
+                        detail.intro,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 15,
+                          height: 1.6,
+                        ),
+                      ),
+                      crossFadeState: _isDescriptionExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 200),
+                    ),
+                    if (detail.intro.length > 100)
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isDescriptionExpanded = !_isDescriptionExpanded;
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            _isDescriptionExpanded ? '收起' : '展开',
+                            style: const TextStyle(
+                              color: systemBlue,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+        // 元数据信息 - iOS grouped card style
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildMetaRow(
+                    '字数',
+                    detail.wordCount ?? '未知',
+                    colorScheme,
+                  ),
+                  if (detail.status != null && detail.status!.isNotEmpty) ...[
+                    _buildMetaDivider(),
+                    _buildMetaRow('状态', detail.status!, colorScheme),
+                  ],
+                  if (detail.lastChapter != null &&
+                      detail.lastChapter!.isNotEmpty) ...[
+                    _buildMetaDivider(),
+                    _buildMetaRow(
+                      '最新',
+                      detail.lastChapter!,
+                      colorScheme,
+                      maxLines: 1,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // 章节目录 header
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '目录',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      '${_chapters.length} 章',
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isChapterReversed = !_isChapterReversed;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: systemBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _isChapterReversed ? '倒序' : '正序',
+                          style: const TextStyle(
+                            color: systemBlue,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // 章节列表 - iOS list style
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: List.generate(
+                  _chapters.length > 20 ? 20 : _chapters.length,
+                  (index) {
+                    final actualIndex = _isChapterReversed
+                        ? _chapters.length - 1 - index
+                        : index;
+                    if (actualIndex < 0 || actualIndex >= _chapters.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final chapter = _chapters[actualIndex];
+                    return Column(
+                      children: [
+                        ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 0,
+                          ),
+                          title: Text(
+                            chapter.title,
+                            style: const TextStyle(fontSize: 15),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: chapter.isVip
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: systemIndigo.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'VIP',
+                                    style: TextStyle(
+                                      color: systemIndigo,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        if (index < (_chapters.length > 20 ? 20 : _chapters.length) - 1)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16),
+                            child: Container(
+                              height: 0.5,
+                              color: Colors.grey.withOpacity(0.2),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Show more chapters hint
+        if (_chapters.length > 20)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Center(
+                child: Text(
+                  '还有 ${_chapters.length - 20} 章...',
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // Source section
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: systemIndigo.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.source_outlined,
+                      size: 18,
+                      color: systemIndigo,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '当前来源',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _detail?.sourceName ?? widget.sourceDef.bookSourceName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () {
+                      // Source switching logic would go here
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '换源',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
 
@@ -347,43 +650,100 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
   }
 
   Widget _buildCover(String? coverUrl, ColorScheme colorScheme) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        width: 100,
-        height: 140,
-        child: coverUrl != null && coverUrl.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: coverUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 120,
+          height: 160,
+          child: coverUrl != null && coverUrl.isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: coverUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: colorScheme.outlineVariant,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: colorScheme.outlineVariant,
+                    child: const Icon(Icons.book, size: 48),
+                  ),
+                )
+              : Container(
                   color: colorScheme.outlineVariant,
-                  child: const Center(child: CircularProgressIndicator()),
+                  child: const Icon(Icons.book, size: 48),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  color: colorScheme.outlineVariant,
-                  child: const Icon(Icons.book, size: 40),
-                ),
-              )
-            : Container(
-                color: colorScheme.outlineVariant,
-                child: const Icon(Icons.book, size: 40),
-              ),
+        ),
       ),
     );
   }
 
-  Widget _buildTag(String text) {
+  Widget _buildTag(String text, Color tagColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(4),
+        color: tagColor.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 11),
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.9),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
+    );
+  }
+
+  Widget _buildMetaRow(
+    String label,
+    String value,
+    ColorScheme colorScheme, {
+    int? maxLines,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 60,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 15),
+              maxLines: maxLines,
+              overflow: maxLines != null ? TextOverflow.ellipsis : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetaDivider() {
+    return Container(
+      height: 0.5,
+      color: Colors.grey.withOpacity(0.2),
     );
   }
 }

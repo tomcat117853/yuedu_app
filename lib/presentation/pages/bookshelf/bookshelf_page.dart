@@ -38,64 +38,104 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     );
   }
 
+  /// iOS-style bottom sheet grabber handle
+  Widget _buildSheetGrabber() {
+    return Center(
+      child: Container(
+        width: 36,
+        height: 5,
+        margin: const EdgeInsets.only(top: 8, bottom: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(2.5),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(bookshelfProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('我的书架'),
-        actions: [
-          // 视图切换按钮
-          IconButton(
-            icon: Icon(
-              state.viewMode == BookshelfViewMode.grid
-                  ? Icons.view_list
-                  : Icons.grid_view,
+      body: CustomScrollView(
+        slivers: [
+          // iOS Large Title SliverAppBar
+          SliverAppBar(
+            expandedHeight: 96,
+            pinned: true,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            surfaceTintColor: Colors.transparent,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsetsDirectional.only(start: 16, bottom: 16),
+              title: Text(
+                '书架',
+                style: TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ),
-            onPressed: () => ref.read(bookshelfProvider.notifier).toggleViewMode(),
-            tooltip: state.viewMode == BookshelfViewMode.grid ? '列表视图' : '网格视图',
-          ),
-          // 排序按钮
-          PopupMenuButton<BookshelfSortOrder>(
-            icon: const Icon(Icons.sort),
-            tooltip: '排序',
-            onSelected: (order) => ref.read(bookshelfProvider.notifier).setSortOrder(order),
-            itemBuilder: (context) => [
-              _buildSortMenuItem(BookshelfSortOrder.custom, '自定义排序', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.titleAsc, '标题 ↑', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.titleDesc, '标题 ↓', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.authorAsc, '作者 ↑', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.authorDesc, '作者 ↓', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.createdAtDesc, '最近添加', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.createdAtAsc, '最早添加', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.updatedAtDesc, '最近阅读', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.progressDesc, '阅读进度 ↓', state.sortOrder),
-              _buildSortMenuItem(BookshelfSortOrder.progressAsc, '阅读进度 ↑', state.sortOrder),
+            actions: [
+              // 搜索按钮
+              IconButton(
+                icon: const Icon(Icons.search, size: 22),
+                onPressed: () => _showSearch(context),
+                tooltip: '搜索',
+              ),
+              // 添加按钮
+              IconButton(
+                icon: const Icon(Icons.add_rounded, size: 24),
+                onPressed: () => _showAddBookDialog(context),
+                tooltip: '添加书籍',
+              ),
+              // 视图切换按钮
+              IconButton(
+                icon: Icon(
+                  state.viewMode == BookshelfViewMode.grid
+                      ? Icons.view_list_rounded
+                      : Icons.grid_view_rounded,
+                  size: 22,
+                ),
+                onPressed: () => ref.read(bookshelfProvider.notifier).toggleViewMode(),
+                tooltip: state.viewMode == BookshelfViewMode.grid ? '列表视图' : '网格视图',
+              ),
+              // 排序按钮
+              PopupMenuButton<BookshelfSortOrder>(
+                icon: const Icon(Icons.sort_rounded, size: 22),
+                tooltip: '排序',
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onSelected: (order) => ref.read(bookshelfProvider.notifier).setSortOrder(order),
+                itemBuilder: (context) => [
+                  _buildSortMenuItem(BookshelfSortOrder.custom, '自定义排序', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.titleAsc, '标题 ↑', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.titleDesc, '标题 ↓', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.authorAsc, '作者 ↑', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.authorDesc, '作者 ↓', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.createdAtDesc, '最近添加', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.createdAtAsc, '最早添加', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.updatedAtDesc, '最近阅读', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.progressDesc, '阅读进度 ↓', state.sortOrder),
+                  _buildSortMenuItem(BookshelfSortOrder.progressAsc, '阅读进度 ↑', state.sortOrder),
+                ],
+              ),
+              // 分组管理按钮
+              IconButton(
+                icon: const Icon(Icons.folder_outlined, size: 22),
+                onPressed: () => _showGroupManagementDialog(context),
+                tooltip: '分组管理',
+              ),
             ],
           ),
-          // 分组管理按钮
-          IconButton(
-            icon: const Icon(Icons.folder_outlined),
-            onPressed: () => _showGroupManagementDialog(context),
-            tooltip: '分组管理',
-          ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearch(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddBookDialog(context),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
           // 分组选择器
-          if (state.groups.isNotEmpty) _buildGroupSelector(state),
+          if (state.groups.isNotEmpty)
+            SliverToBoxAdapter(child: _buildGroupSelector(state)),
           // 书籍列表
-          Expanded(
+          SliverFillRemaining(
+            hasScrollBody: true,
             child: DropTarget(
               onDragDone: (detail) => _handleFileDrop(detail),
               onDragEntered: (detail) => setState(() => _isDragging = true),
@@ -110,10 +150,6 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddBookDialog(context),
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
@@ -123,50 +159,98 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     String label,
     BookshelfSortOrder currentOrder,
   ) {
+    final isSelected = currentOrder == order;
     return PopupMenuItem(
       value: order,
       child: Row(
         children: [
-          if (currentOrder == order)
-            const Icon(Icons.check, size: 18)
+          if (isSelected)
+            Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.primary)
           else
             const SizedBox(width: 18),
           const SizedBox(width: 8),
-          Text(label),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? Theme.of(context).colorScheme.primary : null,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  /// 构建分组选择器
+  /// 构建分组选择器 (iOS-style)
   Widget _buildGroupSelector(BookshelfState state) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return SizedBox(
+      height: 52,
       child: ListView(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
           // 全部
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: const Text('全部'),
-              selected: state.currentGroup == 'all',
-              onSelected: (_) => ref.read(bookshelfProvider.notifier).switchGroup('all'),
-            ),
+            child: _buildGroupChip('全部', state.currentGroup == 'all'),
           ),
           // 用户分组
           ...state.groups.map((group) {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(group),
-                selected: state.currentGroup == group,
-                onSelected: (_) => ref.read(bookshelfProvider.notifier).switchGroup(group),
-              ),
+              child: _buildGroupChip(group, state.currentGroup == group),
             );
           }),
         ],
+      ),
+    );
+  }
+
+  /// Build a single iOS-style group chip with bottom indicator
+  Widget _buildGroupChip(String label, bool selected) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    return GestureDetector(
+      onTap: () {
+        if (label == '全部') {
+          ref.read(bookshelfProvider.notifier).switchGroup('all');
+        } else {
+          ref.read(bookshelfProvider.notifier).switchGroup(label);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? primary.withOpacity(0.12) : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
+          border: selected
+              ? Border.all(color: primary.withOpacity(0.3), width: 1)
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                color: selected ? primary : theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            if (selected) ...[
+              const SizedBox(height: 2),
+              Container(
+                width: 16,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -178,19 +262,30 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => GroupManagementSheet(
-        groups: ref.read(bookshelfProvider).groups,
-        onCreateGroup: (name) => ref.read(bookshelfProvider.notifier).createGroup(name),
-        onDeleteGroup: (name) => ref.read(bookshelfProvider.notifier).deleteGroup(name),
-        onRenameGroup: (oldName, newName) => ref.read(bookshelfProvider.notifier).renameGroup(oldName, newName),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSheetGrabber(),
+          GroupManagementSheet(
+            groups: ref.read(bookshelfProvider).groups,
+            onCreateGroup: (name) => ref.read(bookshelfProvider.notifier).createGroup(name),
+            onDeleteGroup: (name) => ref.read(bookshelfProvider.notifier).deleteGroup(name),
+            onRenameGroup: (oldName, newName) => ref.read(bookshelfProvider.notifier).renameGroup(oldName, newName),
+          ),
+        ],
       ),
     );
   }
-  
-  /// 构建拖拽提示覆盖层
+
+  /// 构建拖拽提示覆盖层 (polished with rounded corners and dashed border effect)
   Widget _buildDropOverlay() {
+    final primary = Theme.of(context).colorScheme.primary;
     return Container(
-      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+      decoration: BoxDecoration(
+        color: primary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      margin: const EdgeInsets.all(16),
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(32),
@@ -198,25 +293,41 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary,
+              color: primary.withOpacity(0.6),
               width: 2,
+              strokeAlign: BorderSide.strokeAlignOutside,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withOpacity(0.1),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.file_download,
-                size: 64,
-                color: Theme.of(context).colorScheme.primary,
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.file_download_outlined,
+                  size: 32,
+                  color: primary,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
                 '释放文件以导入书籍',
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  color: primary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -233,23 +344,23 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       ),
     );
   }
-  
+
   /// 处理文件拖拽
   Future<void> _handleFileDrop(DropDoneDetails detail) async {
     setState(() => _isDragging = false);
-    
+
     final validExtensions = ['.txt', '.epub'];
     int importCount = 0;
-    
+
     for (final file in detail.files) {
       final path = file.path;
       final extension = path.toLowerCase();
-      
+
       // 检查文件扩展名
       if (!validExtensions.any((ext) => extension.endsWith(ext))) {
         continue;
       }
-      
+
       try {
         await ref.read(bookshelfProvider.notifier).importLocalBook(path);
         importCount++;
@@ -261,7 +372,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         }
       }
     }
-    
+
     if (importCount > 0 && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('成功导入 $importCount 本书籍')),
@@ -303,23 +414,51 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           children: [
             Icon(
               Icons.menu_book_outlined,
-              size: 80,
+              size: 72,
               color: theme.hintColor.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
-              '书架空空如也',
-              style: TextStyle(color: theme.hintColor, fontSize: 16),
+              '书架还是空的',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              '点击 + 或拖拽文件添加书籍',
+              '搜索或导入书籍开始阅读',
               style: TextStyle(color: theme.hintColor, fontSize: 14),
             ),
-            const SizedBox(height: 4),
-            Text(
-              '支持 TXT、EPUB 格式',
-              style: TextStyle(color: theme.hintColor.withOpacity(0.6), fontSize: 12),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: () => _showSearch(context),
+                  icon: const Icon(Icons.search, size: 18),
+                  label: const Text('搜索书籍'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton.tonalIcon(
+                  onPressed: () => _importLocalFile(context),
+                  icon: const Icon(Icons.folder_open, size: 18),
+                  label: const Text('导入文件'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -340,7 +479,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 0.65,
+        childAspectRatio: 0.62,
         crossAxisSpacing: 12,
         mainAxisSpacing: 16,
       ),
@@ -358,7 +497,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     );
   }
 
-  /// 构建列表视图
+  /// 构建列表视图 (iOS card style)
   Widget _buildListView(BuildContext context, BookshelfState state) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -366,11 +505,25 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       itemBuilder: (context, index) {
         final book = state.books[index];
         final progress = state.progressMap[book.id];
-        return BookListTile(
-          book: book,
-          progress: progress,
-          onTap: () => _onBookTap(book.id),
-          onLongPress: () => _showBookOptionsMenu(context, book),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: BookListTile(
+            book: book,
+            progress: progress,
+            onTap: () => _onBookTap(book.id),
+            onLongPress: () => _showBookOptionsMenu(context, book),
+          ),
         );
       },
     );
@@ -387,8 +540,9 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            _buildSheetGrabber(),
             ListTile(
-              leading: const Icon(Icons.folder),
+              leading: const Icon(Icons.folder_outlined),
               title: const Text('移动到分组'),
               onTap: () {
                 Navigator.pop(context);
@@ -396,7 +550,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
               },
             ),
             ListTile(
-              leading: Icon(book.status == 2 ? Icons.unarchive : Icons.archive),
+              leading: Icon(book.status == 2 ? Icons.unarchive_outlined : Icons.archive_outlined),
               title: Text(book.status == 2 ? '取消归档' : '归档'),
               onTap: () {
                 Navigator.pop(context);
@@ -411,6 +565,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
                 _confirmDeleteBook(context, book);
               },
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -423,11 +578,13 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('移动到分组'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: groups.map((group) {
             return ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               title: Text(group),
               selected: book.groupId == group,
               onTap: () {
@@ -446,6 +603,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('删除书籍'),
         content: Text('确定要删除《${book.title}》吗？此操作不可恢复。'),
         actions: [
@@ -453,12 +611,12 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text('取消'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               Navigator.pop(context);
               ref.read(bookshelfProvider.notifier).deleteBook(book.id);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('删除'),
           ),
         ],
@@ -472,20 +630,25 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('搜索书籍'),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
             hintText: '输入书名或作者',
             prefixIcon: Icon(Icons.search),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
           ),
+          autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('取消'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               ref.read(bookshelfProvider.notifier).search(controller.text);
               Navigator.pop(context);
@@ -511,6 +674,8 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildSheetGrabber(),
+              const SizedBox(height: 8),
               const Text(
                 '添加书籍',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -520,6 +685,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
                 leading: const Icon(Icons.folder_open),
                 title: const Text('从本地导入'),
                 subtitle: const Text('支持 TXT、EPUB 格式'),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 onTap: () async {
                   Navigator.pop(context);
                   await _importLocalFile(context);
@@ -529,6 +695,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
                 leading: const Icon(Icons.search),
                 title: const Text('搜索在线书籍'),
                 subtitle: const Text('从书源搜索添加'),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 onTap: () {
                   Navigator.pop(context);
                   context.push(AppRoutes.discover);

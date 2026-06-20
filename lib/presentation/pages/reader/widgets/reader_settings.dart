@@ -1,9 +1,11 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../../../domain/models/layout_config.dart';
 import '../../../../domain/models/reader_theme.dart';
 
-/// 阅读器设置面板
+/// 阅读器设置面板 (Apple-style design with frosted glass)
 class ReaderSettings extends StatelessWidget {
   final LayoutConfig layoutConfig;
   final ReaderTheme theme;
@@ -38,235 +40,250 @@ class ReaderSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: theme.backgroundColor,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            const SizedBox(height: 8),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: Material(
+          color: theme.backgroundColor.withOpacity(0.85),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ListView(
+              children: [
+                const SizedBox(height: 8),
 
-            // 拖动指示条
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
+                // iOS-style grabber
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 5,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: theme.hintColor.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2.5),
+                    ),
+                  ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-            // 字体大小
-            _buildSettingRow(
-              label: '字体大小',
-              child: Row(
-                children: [
-                  _buildCircleButton(
-                    icon: Icons.remove,
-                    onTap: onDecreaseFontSize,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      '${layoutConfig.fontSize.toInt()}',
-                      style: TextStyle(
-                        color: theme.textColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                // 字体大小
+                _buildSettingRow(
+                  label: '字体大小',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildCircleButton(
+                        icon: Icons.remove,
+                        onTap: onDecreaseFontSize,
                       ),
-                    ),
-                  ),
-                  _buildCircleButton(
-                    icon: Icons.add,
-                    onTap: onIncreaseFontSize,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 行距
-            _buildSettingRow(
-              label: '行距',
-              child: Row(
-                children: [
-                  _buildCircleButton(
-                    icon: Icons.remove,
-                    onTap: onDecreaseLineHeight,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      layoutConfig.lineHeight.toStringAsFixed(1),
-                      style: TextStyle(
-                        color: theme.textColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  _buildCircleButton(
-                    icon: Icons.add,
-                    onTap: onIncreaseLineHeight,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 主题选择 - 基础主题
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Text(
-                    '主题',
-                    style: TextStyle(
-                      color: theme.textColor,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const Spacer(),
-                  ...ReaderTheme.presets.take(4).map((preset) {
-                    final isSelected = preset.themeIndex == theme.themeIndex;
-                    return GestureDetector(
-                      onTap: () {
-                        if (onThemeChanged != null) {
-                          onThemeChanged!(preset);
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 12),
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: preset.backgroundColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: isSelected
-                              ? Border.all(color: Colors.white, width: 2)
-                              : Border.all(color: Colors.white24, width: 1),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          '${layoutConfig.fontSize.toInt()}',
+                          style: TextStyle(
+                            color: theme.textColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // 主题选择 - 扩展主题
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Row(
-                children: [
-                  Text(
-                    '更多',
-                    style: TextStyle(
-                      color: theme.hintColor,
-                      fontSize: 12,
-                    ),
+                      _buildCircleButton(
+                        icon: Icons.add,
+                        onTap: onIncreaseFontSize,
+                      ),
+                    ],
                   ),
-                  const Spacer(),
-                  ...ReaderTheme.extendedPresets.take(6).map((preset) {
-                    final isSelected = preset.themeIndex == theme.themeIndex;
-                    return GestureDetector(
-                      onTap: () {
-                        if (onThemeChanged != null) {
-                          onThemeChanged!(preset);
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 10),
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: preset.backgroundColor,
-                          borderRadius: BorderRadius.circular(6),
-                          border: isSelected
-                              ? Border.all(color: Colors.white, width: 2)
-                              : Border.all(color: Colors.white24, width: 1),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 行距
+                _buildSettingRow(
+                  label: '行距',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildCircleButton(
+                        icon: Icons.remove,
+                        onTap: onDecreaseLineHeight,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          layoutConfig.lineHeight.toStringAsFixed(1),
+                          style: TextStyle(
+                            color: theme.textColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    );
-                  }),
-                ],
-              ),
+                      _buildCircleButton(
+                        icon: Icons.add,
+                        onTap: onIncreaseLineHeight,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 主题选择 - 基础主题
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        '主题',
+                        style: TextStyle(
+                          color: theme.textColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const Spacer(),
+                      ...ReaderTheme.presets.take(4).map((preset) {
+                        final isSelected = preset.themeIndex == theme.themeIndex;
+                        return GestureDetector(
+                          onTap: () {
+                            if (onThemeChanged != null) {
+                              onThemeChanged!(preset);
+                            }
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 12),
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: preset.backgroundColor,
+                              borderRadius: BorderRadius.circular(10),
+                              border: isSelected
+                                  ? Border.all(color: Colors.white, width: 2)
+                                  : Border.all(
+                                      color: theme.hintColor.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+
+                // 主题选择 - 扩展主题
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        '更多',
+                        style: TextStyle(
+                          color: theme.hintColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+                      ...ReaderTheme.extendedPresets.take(6).map((preset) {
+                        final isSelected = preset.themeIndex == theme.themeIndex;
+                        return GestureDetector(
+                          onTap: () {
+                            if (onThemeChanged != null) {
+                              onThemeChanged!(preset);
+                            }
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 10),
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: preset.backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                              border: isSelected
+                                  ? Border.all(color: Colors.white, width: 2)
+                                  : Border.all(
+                                      color: theme.hintColor.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 段距滑块
+                if (onParagraphSpacingChanged != null)
+                  _buildSliderRow(
+                    label: '段距',
+                    value: layoutConfig.paragraphSpacing,
+                    min: 0.0,
+                    max: 2.0,
+                    divisions: 20,
+                    displayValue: layoutConfig.paragraphSpacing.toStringAsFixed(1),
+                    onChanged: onParagraphSpacingChanged!,
+                  ),
+
+                const SizedBox(height: 8),
+
+                // 页边距滑块
+                if (onMarginChanged != null)
+                  _buildSliderRow(
+                    label: '边距',
+                    value: layoutConfig.margin,
+                    min: 8.0,
+                    max: 48.0,
+                    divisions: 20,
+                    displayValue: '${layoutConfig.margin.toInt()}',
+                    onChanged: onMarginChanged!,
+                  ),
+
+                const SizedBox(height: 8),
+
+                // 字间距滑块
+                if (onLetterSpacingChanged != null)
+                  _buildSliderRow(
+                    label: '字距',
+                    value: layoutConfig.letterSpacingValue,
+                    min: -1.0,
+                    max: 2.0,
+                    divisions: 15,
+                    displayValue: layoutConfig.letterSpacingValue.toStringAsFixed(1),
+                    onChanged: onLetterSpacingChanged!,
+                  ),
+
+                const SizedBox(height: 16),
+
+                // 字体选择 - horizontal scrollable chips
+                _buildSettingRow(
+                  label: '字体',
+                  child: _buildFontSelector(),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 阅读模式
+                _buildSettingRow(
+                  label: '模式',
+                  child: _buildReadModeSelector(),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 翻页效果
+                if (onPageTransitionChanged != null)
+                  _buildSettingRow(
+                    label: '翻页',
+                    child: _buildPageTransitionSelector(),
+                  ),
+
+                const SizedBox(height: 24),
+              ],
             ),
-
-            const SizedBox(height: 24),
-
-            // 段距滑块
-            if (onParagraphSpacingChanged != null)
-              _buildSliderRow(
-                label: '段距',
-                value: layoutConfig.paragraphSpacing,
-                min: 0.0,
-                max: 2.0,
-                divisions: 20,
-                displayValue: layoutConfig.paragraphSpacing.toStringAsFixed(1),
-                onChanged: onParagraphSpacingChanged!,
-              ),
-
-            const SizedBox(height: 8),
-
-            // 页边距滑块
-            if (onMarginChanged != null)
-              _buildSliderRow(
-                label: '边距',
-                value: layoutConfig.margin,
-                min: 8.0,
-                max: 48.0,
-                divisions: 20,
-                displayValue: '${layoutConfig.margin.toInt()}',
-                onChanged: onMarginChanged!,
-              ),
-
-            const SizedBox(height: 8),
-
-            // 字间距滑块
-            if (onLetterSpacingChanged != null)
-              _buildSliderRow(
-                label: '字距',
-                value: layoutConfig.letterSpacingValue,
-                min: -1.0,
-                max: 2.0,
-                divisions: 15,
-                displayValue: layoutConfig.letterSpacingValue.toStringAsFixed(1),
-                onChanged: onLetterSpacingChanged!,
-              ),
-
-            const SizedBox(height: 16),
-
-            // 字体选择
-            _buildSettingRow(
-              label: '字体',
-              child: _buildFontSelector(),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 阅读模式
-            _buildSettingRow(
-              label: '模式',
-              child: _buildReadModeSelector(),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 翻页效果
-            if (onPageTransitionChanged != null)
-              _buildSettingRow(
-                label: '翻页',
-                child: _buildPageTransitionSelector(),
-              ),
-
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );
@@ -275,7 +292,7 @@ class ReaderSettings extends StatelessWidget {
   /// 构建设置行
   Widget _buildSettingRow({required String label, required Widget child}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           Text(
@@ -292,23 +309,23 @@ class ReaderSettings extends StatelessWidget {
     );
   }
 
-  /// 构建圆形按钮
+  /// 构建圆形按钮 (40x40, Apple-style)
   Widget _buildCircleButton({required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 36,
-        height: 36,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: theme.textColor.withOpacity(0.3)),
         ),
-        child: Icon(icon, size: 20, color: theme.textColor),
+        child: Icon(icon, size: 22, color: theme.textColor),
       ),
     );
   }
 
-  /// 构建滑块行
+  /// 构建滑块行 (refined Apple-style)
   Widget _buildSliderRow({
     required String label,
     required double value,
@@ -319,7 +336,7 @@ class ReaderSettings extends StatelessWidget {
     required ValueChanged<double> onChanged,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           SizedBox(
@@ -333,14 +350,22 @@ class ReaderSettings extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              divisions: divisions,
-              onChanged: onChanged,
-              activeColor: theme.textColor,
-              inactiveColor: theme.textColor.withOpacity(0.3),
+            child: SliderTheme(
+              data: SliderThemeData(
+                activeTrackColor: theme.textColor,
+                inactiveTrackColor: theme.textColor.withOpacity(0.3),
+                thumbColor: theme.textColor,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                trackHeight: 2,
+                overlayColor: theme.textColor.withOpacity(0.12),
+              ),
+              child: Slider(
+                value: value.clamp(min, max),
+                min: min,
+                max: max,
+                divisions: divisions,
+                onChanged: onChanged,
+              ),
             ),
           ),
           SizedBox(
@@ -359,70 +384,80 @@ class ReaderSettings extends StatelessWidget {
     );
   }
 
-  /// 字体选择器
+  /// 字体选择器 - horizontal scrollable chips
   Widget _buildFontSelector() {
-    return PopupMenuButton<String>(
-      initialValue: layoutConfig.fontFamily,
-      onSelected: (value) {
-        onFontFamilyChanged?.call(value);
-      },
-      itemBuilder: (context) {
-        return BuiltInFonts.options.map((font) {
-          return PopupMenuItem<String>(
-            value: font.fontFamily,
-            child: Text(
-              font.displayName,
-              style: TextStyle(
-                fontFamily: font.fontFamily == 'system' ? null : font.fontFamily,
-              ),
-            ),
-          );
-        }).toList();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.hintColor),
-          borderRadius: BorderRadius.circular(6),
-        ),
+    return SizedBox(
+      height: 32,
+      width: 200,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              BuiltInFonts.getDisplayName(layoutConfig.fontFamily),
-              style: TextStyle(color: theme.textColor, fontSize: 14),
-            ),
-            Icon(Icons.arrow_drop_down, color: theme.textColor),
-          ],
+          children: BuiltInFonts.options.map((font) {
+            final isSelected = layoutConfig.fontFamily == font.fontFamily;
+            return GestureDetector(
+              onTap: () {
+                onFontFamilyChanged?.call(font.fontFamily);
+              },
+              child: Container(
+                margin: const EdgeInsets.only(left: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.textColor.withOpacity(0.2)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.textColor
+                        : theme.hintColor.withOpacity(0.3),
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  font.displayName,
+                  style: TextStyle(
+                    fontFamily: font.fontFamily == 'system' ? null : font.fontFamily,
+                    color: isSelected ? theme.textColor : theme.hintColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  /// 阅读模式选择器
+  /// 阅读模式选择器 - pill buttons
   Widget _buildReadModeSelector() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildModeButton(
-          icon: Icons.menu_book,
-          label: '翻页',
-          isSelected: layoutConfig.readMode == 0,
-          onTap: () => onReadModeChanged?.call(0),
-        ),
-        const SizedBox(width: 8),
-        _buildModeButton(
-          icon: Icons.swap_vert,
-          label: '滚动',
-          isSelected: layoutConfig.readMode == 1,
-          onTap: () => onReadModeChanged?.call(1),
-        ),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.hintColor.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildModePill(
+            icon: Icons.menu_book,
+            label: '翻页',
+            isSelected: layoutConfig.readMode == 0,
+            onTap: () => onReadModeChanged?.call(0),
+          ),
+          _buildModePill(
+            icon: Icons.swap_vert,
+            label: '滚动',
+            isSelected: layoutConfig.readMode == 1,
+            onTap: () => onReadModeChanged?.call(1),
+          ),
+        ],
+      ),
     );
   }
 
-  /// 模式按钮
-  Widget _buildModeButton({
+  /// 模式按钮 - pill style
+  Widget _buildModePill({
     required IconData icon,
     required String label,
     required bool isSelected,
@@ -431,13 +466,12 @@ class ReaderSettings extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? theme.textColor.withOpacity(0.2) : Colors.transparent,
-          border: Border.all(
-            color: isSelected ? theme.textColor : theme.hintColor,
-          ),
-          borderRadius: BorderRadius.circular(6),
+          color: isSelected
+              ? theme.textColor.withOpacity(0.2)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -449,6 +483,7 @@ class ReaderSettings extends StatelessWidget {
               style: TextStyle(
                 color: isSelected ? theme.textColor : theme.hintColor,
                 fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
               ),
             ),
           ],
@@ -457,7 +492,7 @@ class ReaderSettings extends StatelessWidget {
     );
   }
 
-  /// 翻页效果选择器
+  /// 翻页效果选择器 - small pill buttons
   Widget _buildPageTransitionSelector() {
     final transitions = [
       (PageTransition.none, '无'),
@@ -474,20 +509,25 @@ class ReaderSettings extends StatelessWidget {
         return GestureDetector(
           onTap: () => onPageTransitionChanged?.call(t.$1),
           child: Container(
-            margin: const EdgeInsets.only(left: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            margin: const EdgeInsets.only(left: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: isSelected ? theme.textColor.withOpacity(0.2) : Colors.transparent,
+              color: isSelected
+                  ? theme.textColor.withOpacity(0.2)
+                  : Colors.transparent,
               border: Border.all(
-                color: isSelected ? theme.textColor : theme.hintColor,
+                color: isSelected
+                    ? theme.textColor
+                    : theme.hintColor.withOpacity(0.3),
               ),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Text(
               t.$2,
               style: TextStyle(
                 color: isSelected ? theme.textColor : theme.hintColor,
-                fontSize: 12,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
               ),
             ),
           ),

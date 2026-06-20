@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../domain/models/book.dart';
 import '../../../../domain/models/read_progress.dart';
 
-/// 书籍卡片组件（网格视图）
+/// 书籍卡片组件（网格视图）- Apple-style design
 class BookCard extends StatelessWidget {
   final Book book;
   final ReadProgress? progress;
@@ -20,23 +20,22 @@ class BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 封面
+          // 封面 (3:4 aspect ratio container)
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 color: _getCoverColor(book),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -47,7 +46,7 @@ class BookCard extends StatelessWidget {
                   // 封面图片或默认
                   if (book.coverPath != null && File(book.coverPath!).existsSync())
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                       child: Image.file(
                         File(book.coverPath!),
                         fit: BoxFit.cover,
@@ -55,7 +54,7 @@ class BookCard extends StatelessWidget {
                     )
                   else
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                       child: Container(
                         color: _getCoverColor(book),
                         child: Center(
@@ -88,7 +87,51 @@ class BookCard extends StatelessWidget {
                       ),
                     ),
 
-                  // 进度条
+                  // 格式标签 (top-right, semi-transparent black background)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        book.format.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 归档标签
+                  if (book.status == 2)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          '已归档',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // 进度条 (minHeight 3, at bottom of cover)
                   if (progress != null && progress!.progressPercent > 0)
                     Positioned(
                       bottom: 0,
@@ -96,37 +139,16 @@ class BookCard extends StatelessWidget {
                       right: 0,
                       child: ClipRRect(
                         borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(8),
-                          bottomRight: Radius.circular(8),
+                          bottomLeft: Radius.circular(12),
+                          bottomRight: Radius.circular(12),
                         ),
                         child: LinearProgressIndicator(
                           value: progress!.progressPercent / 100,
-                          backgroundColor: Colors.black.withOpacity(0.3),
+                          backgroundColor: Colors.black.withOpacity(0.2),
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            colorScheme.primary,
+                            Theme.of(context).colorScheme.primary,
                           ),
-                          minHeight: 4,
-                        ),
-                      ),
-                    ),
-
-                  // 归档标签
-                  if (book.status == 2)
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          '已归档',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
+                          minHeight: 3,
                         ),
                       ),
                     ),
@@ -135,7 +157,7 @@ class BookCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // 书名
+          // 书名 (fontSize 13, fontWeight w500, max 1 line)
           Text(
             book.title,
             style: const TextStyle(
@@ -145,13 +167,13 @@ class BookCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          // 作者
+          // 作者 (fontSize 11, gray6 color)
           if (book.author != null && book.author!.isNotEmpty)
             Text(
               book.author!,
               style: TextStyle(
                 fontSize: 11,
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

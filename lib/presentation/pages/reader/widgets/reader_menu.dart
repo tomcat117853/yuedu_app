@@ -1,8 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../../../../domain/models/book.dart';
 import '../../../../domain/models/reader_theme.dart';
 
-/// 阅读器菜单 - 顶部和底部工具栏
+/// 阅读器菜单 - 顶部和底部工具栏 (Apple-style frosted glass)
 class ReaderMenu extends StatelessWidget {
   final Book? book;
   final int currentChapter;
@@ -43,22 +45,39 @@ class ReaderMenu extends StatelessWidget {
     this.onPageSliderChangeEnd,
   });
 
+  /// Whether the current reader theme is considered "dark"
+  bool get _isDarkTheme {
+    // Use luminance to decide — dark background means dark theme
+    return readerTheme.backgroundColor.computeLuminance() < 0.4;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 顶部工具栏
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withOpacity(0.7),
-                Colors.transparent,
-              ],
-            ),
-          ),
+        // 顶部工具栏 - frosted glass
+        _buildTopToolbar(),
+
+        const Spacer(),
+
+        // 底部进度栏 - frosted glass
+        _buildBottomToolbar(),
+      ],
+    );
+  }
+
+  /// 顶部工具栏 - 毛玻璃效果
+  Widget _buildTopToolbar() {
+    final isDark = _isDarkTheme;
+    final bgColor = isDark
+        ? Colors.black.withOpacity(0.70)
+        : Colors.white.withOpacity(0.70);
+
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          color: bgColor,
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -66,7 +85,11 @@ class ReaderMenu extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     onPressed: onBack,
                   ),
                   Expanded(
@@ -109,21 +132,22 @@ class ReaderMenu extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
 
-        const Spacer(),
+  /// 底部工具栏 - 毛玻璃效果
+  Widget _buildBottomToolbar() {
+    final isDark = _isDarkTheme;
+    final bgColor = isDark
+        ? Colors.black.withOpacity(0.80)
+        : Colors.white.withOpacity(0.80);
 
-        // 底部进度栏
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: [
-                Colors.black.withOpacity(0.7),
-                Colors.transparent,
-              ],
-            ),
-          ),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        child: Container(
+          color: bgColor,
           child: SafeArea(
             top: false,
             child: Column(
@@ -142,20 +166,30 @@ class ReaderMenu extends StatelessWidget {
                         ),
                       ),
                       Expanded(
-                        child: Slider(
-                          value: totalPages > 1
-                              ? (currentPage - 1) / (totalPages - 1)
-                              : 0,
-                          onChanged: (value) {
-                            onPageSliderChanged?.call(value);
-                          },
-                          onChangeEnd: (value) {
-                            onPageSliderChangeEnd?.call(value);
-                          },
-                          activeColor: Colors.white,
-                          inactiveColor: Colors.white24,
-                          min: 0,
-                          max: 1,
+                        child: SliderTheme(
+                          data: SliderThemeData(
+                            activeTrackColor: Colors.white,
+                            inactiveTrackColor: Colors.white.withOpacity(0.24),
+                            thumbColor: Colors.white,
+                            thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 6,
+                            ),
+                            trackHeight: 2,
+                            overlayColor: Colors.white.withOpacity(0.12),
+                          ),
+                          child: Slider(
+                            value: totalPages > 1
+                                ? (currentPage - 1) / (totalPages - 1)
+                                : 0,
+                            onChanged: (value) {
+                              onPageSliderChanged?.call(value);
+                            },
+                            onChangeEnd: (value) {
+                              onPageSliderChangeEnd?.call(value);
+                            },
+                            min: 0,
+                            max: 1,
+                          ),
                         ),
                       ),
                       Text(
@@ -207,7 +241,7 @@ class ReaderMenu extends StatelessWidget {
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 

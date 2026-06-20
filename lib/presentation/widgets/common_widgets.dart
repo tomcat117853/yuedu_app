@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 通用组件集合
+/// 通用组件集合 - Apple 风格
 
 /// 加载中组件
 class LoadingWidget extends StatelessWidget {
@@ -15,14 +15,21 @@ class LoadingWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            color: colorScheme.primary,
+          SizedBox(
+            width: 36,
+            height: 36,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: colorScheme.primary,
+            ),
           ),
           if (message != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               message!,
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
             ),
           ],
         ],
@@ -53,37 +60,36 @@ class EmptyStateWidget extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 64,
-              color: colorScheme.outline.withOpacity(0.5),
+              size: 72,
+              color: colorScheme.outline.withOpacity(0.35),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 16,
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.outline,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.outline,
+                    ),
                 textAlign: TextAlign.center,
               ),
             ],
             if (onAction != null && actionLabel != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(
+              const SizedBox(height: 32),
+              FilledButton(
                 onPressed: onAction,
                 child: Text(actionLabel!),
               ),
@@ -107,28 +113,30 @@ class ErrorWidget extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
-              size: 48,
-              color: colorScheme.error,
+              size: 56,
+              color: colorScheme.error.withOpacity(0.8),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.error,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.error,
+                  ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 16),
-              OutlinedButton(
+              const SizedBox(height: 24),
+              FilledButton.tonal(
                 onPressed: onRetry,
+                style: FilledButton.styleFrom(
+                  foregroundColor: colorScheme.error,
+                ),
                 child: const Text('重试'),
               ),
             ],
@@ -139,7 +147,7 @@ class ErrorWidget extends StatelessWidget {
   }
 }
 
-/// 带分隔线的列表项
+/// 带分隔线的列表项 - iOS 风格
 class SeparatedListTile extends StatelessWidget {
   final Widget title;
   final Widget? subtitle;
@@ -158,6 +166,7 @@ class SeparatedListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         ListTile(
@@ -167,7 +176,14 @@ class SeparatedListTile extends StatelessWidget {
           trailing: trailing,
           onTap: onTap,
         ),
-        const Divider(height: 1, indent: 16, endIndent: 16),
+        Divider(
+          height: 0.5,
+          thickness: 0.5,
+          indent: 20,
+          color: isDark
+              ? const Color(0xFF38383A)
+              : const Color(0xFFE5E5EA),
+        ),
       ],
     );
   }
@@ -198,7 +214,7 @@ class LabeledText extends StatelessWidget {
           label,
           style: labelStyle ??
               TextStyle(
-                color: colorScheme.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant.withOpacity(0.8),
                 fontSize: 13,
               ),
         ),
@@ -207,8 +223,9 @@ class LabeledText extends StatelessWidget {
           child: Text(
             value,
             style: valueStyle ??
-                const TextStyle(
+                TextStyle(
                   fontSize: 13,
+                  color: colorScheme.onSurface,
                 ),
           ),
         ),
@@ -217,7 +234,7 @@ class LabeledText extends StatelessWidget {
   }
 }
 
-/// 确认对话框
+/// 确认对话框 - iOS 风格
 Future<bool?> showConfirmDialog({
   required BuildContext context,
   required String title,
@@ -230,50 +247,108 @@ Future<bool?> showConfirmDialog({
   return showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      title: Text(title),
-      content: Text(content),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 17,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      content: Text(
+        content,
+        style: TextStyle(
+          color: colorScheme.onSurfaceVariant,
+          fontSize: 13,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(cancelText),
+          child: Text(
+            cancelText,
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
         ),
         TextButton(
           onPressed: () => Navigator.pop(dialogContext, true),
-          style: isDangerous
-              ? TextButton.styleFrom(foregroundColor: colorScheme.error)
-              : null,
-          child: Text(confirmText),
+          child: Text(
+            confirmText,
+            style: TextStyle(
+              color: isDangerous ? colorScheme.error : colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ],
     ),
   );
 }
 
-/// 带底部弹窗的输入对话框
+/// 带底部弹窗的输入对话框 - iOS 风格
 Future<String?> showInputDialog({
   required BuildContext context,
   required String title,
   String? hintText,
   String? initialValue,
 }) {
+  final colorScheme = Theme.of(context).colorScheme;
   final controller = TextEditingController(text: initialValue ?? '');
   return showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text(title),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hintText,
-        ),
-        autofocus: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
       ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 17,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      content: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: hintText,
+            filled: true,
+            fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+          autofocus: true,
+        ),
+      ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(
+            '取消',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
         ),
-        ElevatedButton(
+        FilledButton(
           onPressed: () => Navigator.pop(context, controller.text),
           child: const Text('确定'),
         ),
